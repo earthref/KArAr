@@ -34,5 +34,3 @@ We use Browser Stack to check for cross-browser compatability:
 <a href="http://BrowserStack.com">
   <img width="200" src="./Browserstack-logo.svg"/>
 </a>
-
-Testing git
