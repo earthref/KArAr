@@ -17,7 +17,7 @@ const Routes = () => (
       if (window.history.replaceState)
         window.history.replaceState({}, 'Vocabularies | EarthRef.org', '/vocabularies/' + match.params.v);
       return (
-        <Page portal="KARAR" title="Browse the EarthRef Vocabularies:">
+        <Page portal="KArAr" title="Browse the EarthRef Vocabularies:">
           <Helmet>
             <title>Vocabularies | EarthRef.org</title>
           </Helmet>
@@ -26,15 +26,15 @@ const Routes = () => (
       );
     }}/>
     <Route exact path="/orcid" render={({location}) =>
-      <Page portal="KARAR">
+      <Page portal="KArAr">
         <ORCIDLoggingInModal code={queryString.parse(location.search).code} />
       </Page>
     }/>
     <Route exact path="/log-in" render={({location}) =>
-      <Page portal="KARAR">
+      <Page portal="KArAr">
         {	parseInt(Cookies.get('mail_id', Meteor.isDevelopment ? {} : { domain: '.earthref.org'})) ?
-          <User openInitially portal="KARAR"/> :
-          <LogIn openInitially portal="KARAR"/>
+          <User openInitially portal="KArAr"/> :
+          <LogIn openInitially portal="KArAr"/>
         }
       </Page>
     }/>
@@ -45,15 +45,15 @@ const Routes = () => (
       return <Redirect to={location.search.next_url || '/'}/>;
     }}/>
     <Route exact path="/edit-profile" render={({location}) =>
-      <Page portal="KARAR">
+      <Page portal="KArAr">
         {	parseInt(Cookies.get('mail_id', Meteor.isDevelopment ? {} : { domain: '.earthref.org'})) ?
-          <User openInitially portal="KARAR"/> :
-          <LogIn openInitially portal="KARAR"/>
+          <User openInitially portal="KArAr"/> :
+          <LogIn openInitially portal="KArAr"/>
         }
       </Page>
     }/>
     <Route render={() =>
-      <Page portal="KARAR">
+      <Page portal="KArAr">
         <Error title="Error 404: Sorry, this page is missing!"/>
       </Page>
     }/>

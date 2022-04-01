@@ -77,7 +77,7 @@ const users = {
       "first": "Nick",
       "last": "Jarboe"
     },
-    "avatar": "/KARAR/people/njarboe.jpg",
+    "avatar": "/KArAr/people/njarboe.jpg",
     "position": "Data Analyst",
     "affiliation": "Geoscience Research Divison, Scripps Institution of Oceanography, UC San Diego",
     "badges": [
@@ -97,7 +97,7 @@ const users = {
       "first": "Rupert",
       "last": "Minnett"
     },
-    "avatar": "/KARAR/people/rminnett.jpg",
+    "avatar": "/KArAr/people/rminnett.jpg",
     "position": "Software Developer",
     "affiliation": "College of Earth, Ocean and Atmospheric Science, Oregon State University",
     "badges": [
@@ -116,7 +116,7 @@ const users = {
       "first": "Lori",
       "last": "Jonestrask"
     },
-    "avatar": "/KARAR/people/ljonestrask.jpg",
+    "avatar": "/KArAr/people/ljonestrask.jpg",
     "position": "Software Developer",
     "affiliation": "Geoscience Research Divison, Scripps Institution of Oceanography, UC San Diego",
     "badges": [
@@ -132,7 +132,7 @@ const users = {
       "first": "Cathy",
       "last": "Constable"
     },
-    "avatar": "/KARAR/people/cconstable.jpg",
+    "avatar": "/KArAr/people/cconstable.jpg",
     "position": "Professor of Geophysics",
     "affiliation": "Institute of Geophysics and Planetary Physics, Scripps Institution of Oceanography, UC San Diego",
     "badges": [
@@ -152,7 +152,7 @@ const users = {
       "first": "Anthony",
       "last": "Koppers"
     },
-    "avatar": "/KARAR/people/akoppers.jpg",
+    "avatar": "/KArAr/people/akoppers.jpg",
     "position": "Professor of Geology and Geophysics and Associate Dean for Research Operations",
     "affiliation": "College of Earth, Ocean and Atmospheric Sciences, Oregon State University",
     "badges": [
@@ -172,7 +172,7 @@ const users = {
       "first": "Lisa",
       "last": "Tauxe"
     },
-    "avatar": "/KARAR/people/ltauxe.jpg",
+    "avatar": "/KArAr/people/ltauxe.jpg",
     "position": "Distinguished Professor of Geophysics",
     "affiliation": "Geoscience Research Divison, Scripps Institution of Oceanography, UC San Diego",
     "badges": [

@@ -12,7 +12,7 @@ class Navigation extends React.Component {
     return (
       <div className={(position === 'top' ? 'left menu ' : '') + position + '-navigation'}>
         {portalsOrder.map((p, i) => {
-          return (p === 'KARAR' ?
+          return (p === 'KArAr' ?
             <Link
               key={i}
               className={(portal === p ? 'active ' : '')  + portals[p].color + ' item'}

@@ -195,7 +195,7 @@ export default class extends React.Component {
             Any values in this column shoud either contain valid DOI that is resolvable by 
             doi.org or a valid URL that resolves to a web page. If you have
             a dataset associated with a paper that does not have a DOI (PhD thesis,
-            master thesis, USGS report, etc.), MagIC can store the paper in the KARAR
+            master thesis, USGS report, etc.), MagIC can store the paper in the KArAr
             database (barring copyright issues) and mint a DOI for it.
         </span>
       );
@@ -205,7 +205,7 @@ export default class extends React.Component {
         <span>
           <div className="ui orange horizontal small label">Vocabulary</div>
           Any values in this column must contain a value found
-          in the <Link to={'/KARAR/method-codes'}>Method Codes</Link> controlled vocabulary.
+          in the <Link to={'/KArAr/method-codes'}>Method Codes</Link> controlled vocabulary.
         </span>
       );
     }
@@ -447,7 +447,7 @@ export default class extends React.Component {
                     return (
                       <span key={l}>
                         {(l > 0 ? <br/> : undefined)}
-                        <Link to={'/KARAR/data-models/' + previous_version + '/?q=' + x.table + '.' + x.column}>
+                        <Link to={'/KArAr/data-models/' + previous_version + '/?q=' + x.table + '.' + x.column}>
                           {x.table}.{x.column}
                         </Link>
                       </span>

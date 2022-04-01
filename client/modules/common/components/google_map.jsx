@@ -68,7 +68,7 @@ export default class GoogleMap extends React.Component {
               envelope.coordinates[0][1],
               envelope.coordinates[0][0],
               envelope.coordinates[1][0],
-              s.contribution && '<a href="/KARAR/' + s.contribution.id + '"><b>' + (s.contribution._reference && s.contribution._reference.citation || "Unknown") + 
+              s.contribution && '<a href="/KArAr/' + s.contribution.id + '"><b>' + (s.contribution._reference && s.contribution._reference.citation || "Unknown") + 
               '</b> v. ' + s.contribution.version + '</a>' + 
               '<br/>by ' + s.contribution._contributor
             );
@@ -84,7 +84,7 @@ export default class GoogleMap extends React.Component {
               point.coordinates[1],
               point.coordinates[0],
               point.coordinates[0],
-              s.contribution && '<a href="/KARAR/' + s.contribution.id + '"><b>' + (s.contribution._reference && s.contribution._reference.citation || "Unknown") + 
+              s.contribution && '<a href="/KArAr/' + s.contribution.id + '"><b>' + (s.contribution._reference && s.contribution._reference.citation || "Unknown") + 
               '</b> v. ' + s.contribution.version + '</a>' + 
               '<br/>by ' + s.contribution._contributor
             );

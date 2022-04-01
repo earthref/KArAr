@@ -35,13 +35,13 @@ let index = "karar_v1";
           xml = resp.hits.hits.forEach(hit => {
             hit._source.summary.contribution._history.forEach(contribution => {
               urls[contribution.id] = `<url>` +
-              `<loc>https://earthref.org/KARAR/${contribution.id}</loc>` + 
+              `<loc>https://earthref.org/KArAr/${contribution.id}</loc>` + 
               `<lastmod>${contribution.timestamp}</lastmod>` +
             `</url>`;
             });
           });
         }
-        fs.writeFileSync(`C:/Users/rminn/source/repos/KARAR/public/KARAR/contributions.sitemap.xml`, 
+        fs.writeFileSync(`C:/Users/rminn/source/repos/KArAr/public/KArAr/contributions.sitemap.xml`, 
           `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
           _.keys(urls).sort((a, b) => a - b).map(id => urls[id]).join('\n') + 
           `\n</urlset>`

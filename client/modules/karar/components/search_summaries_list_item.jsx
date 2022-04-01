@@ -95,7 +95,7 @@ class SearchSummariesListItem extends React.Component {
                   document.getElementById('downloadButton' + id).className = "ui file text outline icon";
                 } else {
                   console.error(error);
-                  alert('Failed to find the contribution for download. Please try again soon or email KARAR using the link at the bottom of this page.');
+                  alert('Failed to find the contribution for download. Please try again soon or email KArAr using the link at the bottom of this page.');
                   document.getElementById('downloadButton' + id).className = "ui file text outline icon";
                 }
               }.bind(this, id));
@@ -120,10 +120,10 @@ class SearchSummariesListItem extends React.Component {
       <div style={{minWidth: 200, maxWidth: 200, marginRight: '1em', marginBottom: 5, fontSize:'small', overflow:'hidden', textOverflow:'ellipsis'}}>
         {id &&
         <span>
-          <b>{_is_activated ? 'KARAR Contribution Link:' : 'Future Contribution Link:'}</b>
+          <b>{_is_activated ? 'KArAr Contribution Link:' : 'Future Contribution Link:'}</b>
           <p>{_is_activated ?
-            <a style={this.styles.a} href={'https://earthref.org/KARAR/' + id} target="_blank">{'earthref.org/KARAR/' + id}</a> :
-            <span>{'earthref.org/KARAR/' + id}</span>
+            <a style={this.styles.a} href={'https://earthref.org/KArAr/' + id} target="_blank">{'earthref.org/KArAr/' + id}</a> :
+            <span>{'earthref.org/KArAr/' + id}</span>
           }</p>
         </span>}
         {id &&
@@ -131,10 +131,10 @@ class SearchSummariesListItem extends React.Component {
           <b>{_is_activated ? 'EarthRef Data DOI:' : 'Future Data DOI:'}</b>
           <p>{_is_activated ?
             (_has_data_doi ? 
-              <a style={this.styles.a} href={'http://dx.doi.org/10.7288/V4/KARAR/' + id} target="_blank">{'10.7288/V4/KARAR/' + id}</a> : 
+              <a style={this.styles.a} href={'http://dx.doi.org/10.7288/V4/KArAr/' + id} target="_blank">{'10.7288/V4/KArAr/' + id}</a> : 
               <span>Queued For Creation</span>
              ) :
-            <span>{'10.7288/V4/KARAR/' + id}</span>
+            <span>{'10.7288/V4/KArAr/' + id}</span>
           }</p>
         </span>}
         {doi &&
@@ -370,7 +370,7 @@ class SearchSummariesListItem extends React.Component {
                 <thead>
                 <tr>
                   <th style={{whiteSpace: 'nowrap'}}>Download</th>
-                  <th style={{whiteSpace: 'nowrap'}}>KARAR Contribution Link</th>
+                  <th style={{whiteSpace: 'nowrap'}}>KArAr Contribution Link</th>
                   <th style={{whiteSpace: 'nowrap'}}>EarthRef Data DOI Link</th>
                   <th style={{whiteSpace: 'nowrap'}}>Version</th>
                   <th style={{whiteSpace: 'nowrap'}}>Data Model</th>
@@ -412,18 +412,18 @@ class SearchSummariesListItem extends React.Component {
                       <td>
                         {(_is_activated || i > 0) &&
                         <a style={this.styles.a}
-                          href={'https://earthref.org/KARAR/' + v.id}>{'earthref.org/KARAR/' + v.id}</a>}
+                          href={'https://earthref.org/KArAr/' + v.id}>{'earthref.org/KArAr/' + v.id}</a>}
                         {(!_is_activated && i == 0) &&
                         <span>{'earthref.org/MagIC/' + v.id}</span>}
                       </td>
                       <td>
                         {_is_activated && _has_data_doi &&
                         <a style={this.styles.a}
-                          href={'http://dx.doi.org/10.7288/V4/KARAR/' + v.id} target="_blank">{'10.7288/V4/KARAR/' + v.id}</a>}
+                          href={'http://dx.doi.org/10.7288/V4/KArAr/' + v.id} target="_blank">{'10.7288/V4/KArAr/' + v.id}</a>}
                         {_is_activated && !_has_data_doi &&
                         <span>Queued For Creation</span>}
                         {!_is_activated &&
-                        <span>{'10.7288/V4/KARAR/' + v.id}</span>}
+                        <span>{'10.7288/V4/KArAr/' + v.id}</span>}
                       </td>
                       <td>{v.version}</td>
                       <td>{parseFloat(v.data_model_version).toFixed(1)}</td>

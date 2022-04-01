@@ -579,7 +579,7 @@ export default class UploadContribution extends React.Component {
     }
     else return (
       <DataImporter
-        portal="KARAR"
+        portal="KArAr"
         tableName={tableName}
         nHeaderRows={nHeaderRows}
         data={dataSlice}
@@ -739,14 +739,14 @@ export default class UploadContribution extends React.Component {
 
   render() {
     const step = this.state.visibleStep;
-    if (this.state.uploaded) return <Redirect push to="/KARAR/private"/>;
+    if (this.state.uploaded) return <Redirect push to="/KArAr/private"/>;
     else if (!this.state._contributor) return (
       <div>
         <div className="ui top attached segment" ref={(el) => el && el.style.setProperty('width', 'calc(100% + 2px)', 'important')}>
           <div className="ui center aligned two column relaxed grid">
             <div className="column">
               <IconButton
-                className="borderless card" portal="KARAR"
+                className="borderless card" portal="KArAr"
                 onClick={() => location.href = '//earthref.org/log-in/?next_url=' + window.location.href}
               >
                 <i className="icons">
@@ -761,7 +761,7 @@ export default class UploadContribution extends React.Component {
             </div>
             <div className="column">
               <IconButton
-                className="borderless card" portal="KARAR"
+                className="borderless card" portal="KArAr"
                 onClick={() => location.href = '//earthref.org/register/'}
               >
                 <i className="icons">
@@ -886,7 +886,7 @@ export default class UploadContribution extends React.Component {
               </h4>
               <div className="ui five stackable cards">
                 <IconButton
-                  className="borderless card" portal="KARAR" position="bottom left"
+                  className="borderless card" portal="KArAr" position="bottom left"
                   tooltip={'Click to upload this example dataset into your private ' +
                   'workspace. You can always delete it later.'}
                   onClick={this.uploadExampleMagICv3.bind(this)}
@@ -898,7 +898,7 @@ export default class UploadContribution extends React.Component {
                   <div className="subtitle">Data Model v. 3.0</div>
                 </IconButton>
                 <IconButton
-                  className="borderless card" portal="KARAR" position="bottom left"
+                  className="borderless card" portal="KArAr" position="bottom left"
                   tooltip={'Click to upload this example dataset into your private ' +
                   'workspace. You can always delete it later.'}
                   onClick={this.uploadExampleTabDelimitedSites.bind(this)}
@@ -910,7 +910,7 @@ export default class UploadContribution extends React.Component {
                   <div className="subtitle">Sites Data</div>
                 </IconButton>
                 <IconButton
-                  className="borderless card" portal="KARAR" position="bottom center"
+                  className="borderless card" portal="KArAr" position="bottom center"
                   tooltip={'Click to upload this example dataset into your private ' +
                   'workspace. You can always delete it later.'}
                   onClick={this.uploadExampleTabDelimitedSpecimens.bind(this)}
@@ -922,7 +922,7 @@ export default class UploadContribution extends React.Component {
                   <div className="subtitle">Specimens Data</div>
                 </IconButton>
                 <IconButton
-                  className="borderless card" portal="KARAR" position="bottom right"
+                  className="borderless card" portal="KArAr" position="bottom right"
                   tooltip={'Click to upload this example dataset into your private ' +
                   'workspace. You can always delete it later.'}
                   onClick={this.uploadExampleMagICExcel.bind(this)}
@@ -934,7 +934,7 @@ export default class UploadContribution extends React.Component {
                   <div className="subtitle">Data Model v. 3.0</div>
                 </IconButton>
                 <IconButton
-                  className="borderless card" portal="KARAR" position="bottom right"
+                  className="borderless card" portal="KArAr" position="bottom right"
                     tooltip={'Click to upload this example dataset into your private ' +
                   'workspace. You can always delete it later.'}
                   onClick={this.uploadExampleExcel.bind(this)}

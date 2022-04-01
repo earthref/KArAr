@@ -23,7 +23,7 @@ export default class extends React.Component {
       <React.Fragment>
         <Grid divided><Grid.Row><Grid.Column width={12}>
           <div className="ui three cards">
-            <IconButton className="card" link="/KARAR/search" portal="KARAR">
+            <IconButton className="card" link="/KArAr/search" portal="KArAr">
               <i className="large icons">
                 <i className="database icon"/>
                 <i className="corner search icon"/>
@@ -31,7 +31,7 @@ export default class extends React.Component {
               <div className="title">Search Interface</div>
               <div className="subtitle">Browse, combine, and save datasets.</div>
             </IconButton>
-            <IconButton className="card" link="/KARAR/upload" portal="KARAR">
+            <IconButton className="card" link="/KArAr/upload" portal="KArAr">
               <i className="large icons">
                 <i className="table icon"/>
                 <i className="corner add icon"/>
@@ -39,27 +39,27 @@ export default class extends React.Component {
               <div className="title">Upload Tool</div>
               <div className="subtitle">Import data into your private workspace.</div>
             </IconButton>
-            <IconButton className="card" link="/KARAR/private" portal="KARAR">
+            <IconButton className="card" link="/KArAr/private" portal="KArAr">
               <i className="large icons">
                 <i className="file text outline icon"/>
                 <i className="corner checkmark icon"/>
               </i>
               <div className="title">Private Workspace</div>
-              <div className="subtitle">Manage your contributions to KARAR.</div>
+              <div className="subtitle">Manage your contributions to KArAr.</div>
             </IconButton>
           </div>
           <h2 className="ui horizontal divider header" style={{marginBottom: 0}}>
-            KARAR Resources
+            KArAr Resources
           </h2>
           <div className="ui two cards" style={{marginTop: 0}}>
-            <IconButton className="borderless card" link="/KARAR/data-models/1.0" portal="KARAR">
+            <IconButton className="borderless card" link="/KArAr/data-models/1.0" portal="KArAr">
               <i className="icons">
                 <i className="sitemap icon"/>
                 <i className="corner table icon"/>
               </i>
               <div className="small title">Data<br/>Models</div>
             </IconButton>
-            <IconButton className="borderless card" link="/vocabularies" portal="KARAR">
+            <IconButton className="borderless card" link="/vocabularies" portal="KArAr">
               <i className="icons">
                 <i className="list icon"/>
                 <i className="corner info icon"/>
@@ -77,8 +77,8 @@ export default class extends React.Component {
           >
             <SearchSummariesListItem table="contribution"/>
           </SearchDividedList>
-          <IconButton className="small card" link="/KARAR/search" portal="KARAR" style={{margin:0}}>
-            <div className="small title">View More Contributions in the KARAR Search Interface</div>
+          <IconButton className="small card" link="/KArAr/search" portal="KArAr" style={{margin:0}}>
+            <div className="small title">View More Contributions in the KArAr Search Interface</div>
           </IconButton>
         </Grid.Column>
         <Grid.Column width={4}>

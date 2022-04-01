@@ -496,7 +496,7 @@ class Search extends React.Component {
           {Cookies.get('user_id', Meteor.isDevelopment ? {} : { domain: '.earthref.org'}) ?
             <div className="right menu">
               <div className="item" style={{paddingRight: 0}}>
-                <Link className={portals['KARAR'].color + ' ui compact button'} style={{paddingTop: '0.5em', paddingBottom: '0.5em'}} to="/KARAR/private">
+                <Link className={portals['KArAr'].color + ' ui compact button'} style={{paddingTop: '0.5em', paddingBottom: '0.5em'}} to="/KArAr/private">
                   Private Workspace
                 </Link>
               </div>
@@ -505,9 +505,9 @@ class Search extends React.Component {
         <div className="ui bottom attached secondary segment" style={this.styles.segment}>
           <div style={{display: 'flex', width: '100%'}}>
             <div className="ui labeled fluid action input" style={this.styles.searchInput}>
-              <div className={portals['KARAR'].color + ' ui label'}>
+              <div className={portals['KArAr'].color + ' ui label'}>
                 <i className="search icon"/>
-                Search KARAR
+                Search KArAr
               </div>
               <input
                 ref="search"
@@ -540,7 +540,7 @@ class Search extends React.Component {
               </div>
             </div>
             { this.state.search.indexOf('private_key:') === -1 &&
-              <SearchDownload className={portals['KARAR'].color + ' ui basic button'} style={{margin: '1em 1em 0 0'}}
+              <SearchDownload className={portals['KArAr'].color + ' ui basic button'} style={{margin: '1em 1em 0 0'}}
                   queries={searchQueries} filters={esFilters}>
                 <i className="download icon"/>
                 Download Results
@@ -556,7 +556,7 @@ class Search extends React.Component {
                       Filters
                     </div>
                     <div className="right aligned item" style={{padding:'0 1em'}}>
-                      <div className={'ui small compact button' + (esFilters.length > 0 ? ' ' + portals['KARAR'].color : ' basic disabled')} style={{padding:'0.5em'}}
+                      <div className={'ui small compact button' + (esFilters.length > 0 ? ' ' + portals['KArAr'].color : ' basic disabled')} style={{padding:'0.5em'}}
                         onClick={(e) => this.clearActiveFilters()}
                       >
                         <i className="remove circle icon"/>
@@ -1192,7 +1192,7 @@ class Search extends React.Component {
                           (this.state.elementCounts[elementsByPosition[i+1][j+1].name] ? '' : ' disabled') + 
                           (this.state.activeBucketsFilters['summary.kds.periodic_table'] && 
                             this.state.activeBucketsFilters['summary.kds.periodic_table'].includes(elementsByPosition[i+1][j+1].name) ?
-                            ' ' + portals['KARAR'].color : '')
+                            ' ' + portals['KArAr'].color : '')
                         }
                         style={{
                           position: 'relative', width: '3rem', height: '4.5rem', padding: '1rem 0'
@@ -1231,7 +1231,7 @@ class Search extends React.Component {
             >
               Clear
             </div>
-            <div className={portals['KARAR'].color + ' ui button'} 
+            <div className={portals['KArAr'].color + ' ui button'} 
               onClick={() => $(this.refs[filter.name + '_content']).modal('hide')}
             >
               Close
@@ -1313,13 +1313,13 @@ class Search extends React.Component {
           </div>
         )}
         <div className="right aligned item" style={{padding: '0 1em', display: 'none'}}>
-          <a className={portals['KARAR'].color + ' ui compact button'} style={{padding: '0.5em'}}>
+          <a className={portals['KArAr'].color + ' ui compact button'} style={{padding: '0.5em'}}>
             <i className="ui plus icon"/>
             Custom View
           </a>
         </div>
         <div className="right aligned item" style={{padding: '0 1em'}}>
-          <div ref="sort" className={portals['KARAR'].color + ' ui dropdown label'} style={{padding: '0.5em'}}>
+          <div ref="sort" className={portals['KArAr'].color + ' ui dropdown label'} style={{padding: '0.5em'}}>
             <div className="text">{this.state.sort}</div>
             <i className="dropdown icon"/>
             <div className="menu">

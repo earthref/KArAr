@@ -118,7 +118,7 @@ class DataModel extends React.Component {
       $tbls.find('.data-model-table-count').each(function() {
         const $table = $(this).parents('.data-model-table');
         const n_match = $table.find('.data-model-column').not('.no-match').length;
-        $(this).addClass(portals['KARAR'].color);
+        $(this).addClass(portals['KArAr'].color);
         $(this).children('span').remove();
         $(this).prepend(`<span>${n_match} of </span>`);
         if (n_match === 0)
@@ -129,7 +129,7 @@ class DataModel extends React.Component {
       $grps.find('.data-model-group-count').each(function() {
         const $group = $(this).parents('.data-model-group');
         const n_match = $group.find('.data-model-column').not('.no-match').length;
-        $(this).addClass(portals['KARAR'].color);
+        $(this).addClass(portals['KArAr'].color);
         $(this).children('span').remove();
         $(this).prepend(`<span>${n_match} of </span>`);
         if (n_match === 0)
@@ -138,7 +138,7 @@ class DataModel extends React.Component {
           $group.removeClass('no-match');
       });
       $(this.refs['count']).html($cols.not('.no-match').length + ' of ' + $cols.length);
-      $(this.refs['count']).addClass(portals['KARAR'].color);
+      $(this.refs['count']).addClass(portals['KArAr'].color);
     }
 
     // Enable all columns since the search string is empty.
@@ -147,10 +147,10 @@ class DataModel extends React.Component {
       $grps.removeClass('no-match');
       $cols.removeClass('no-match');
       const $counts = $tbls.find('.data-model-table-count, .data-model-group-count');
-      $counts.removeClass(portals['KARAR'].color);
+      $counts.removeClass(portals['KArAr'].color);
       $counts.children().remove();
       $(this.refs['count']).html($cols.length);
-      $(this.refs['count']).removeClass(portals['KARAR'].color);
+      $(this.refs['count']).removeClass(portals['KArAr'].color);
     }
 
     // If the search has up to 100 column matches or excludes an entire table,
@@ -240,7 +240,7 @@ class DataModel extends React.Component {
           {versions.slice().reverse().map((v,i) => {
             const classes = (v === version ? 'active ' : '') + 'item';
             return (
-              <Link key={i} className={classes} to={`/KARAR/data-models/${v}`}>
+              <Link key={i} className={classes} to={`/KArAr/data-models/${v}`}>
                 {v}
                 {(v === version ?
                   <div
@@ -264,8 +264,8 @@ class DataModel extends React.Component {
                     onChange={this.onSearchChange.bind(this)}
                   />
                   { this.state.search ?
-                    <i className={portals['KARAR'].color + ' close link icon'} onClick={this.clearSearch.bind(this)}/>:
-                    <i className={portals['KARAR'].color + ' search icon'}/>
+                    <i className={portals['KArAr'].color + ' close link icon'} onClick={this.clearSearch.bind(this)}/>:
+                    <i className={portals['KArAr'].color + ' search icon'}/>
                   }
                 </div>
                 <div className="results"></div>

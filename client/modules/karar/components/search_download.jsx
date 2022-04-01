@@ -71,7 +71,7 @@ export default class extends React.Component {
   downloadLevelRows() {
     this.setState({progress: 0});
     this.canceled = false;
-    this.downloadedRows = {contribution: [{data_model_version: _.last(versions), description: `Downloaded from KARAR at ${moment().utc().toISOString()}.`}]};
+    this.downloadedRows = {contribution: [{data_model_version: _.last(versions), description: `Downloaded from KArAr at ${moment().utc().toISOString()}.`}]};
     let processedHits = 0;
     let processResults = (error, results) => {
       try {
@@ -240,7 +240,7 @@ export default class extends React.Component {
                 </tr>
                 <tr>
                   <td colSpan="3">
-                    <Checkbox type="radio" name="format" value="text" label="KARAR Text File"
+                    <Checkbox type="radio" name="format" value="text" label="KArAr Text File"
                       disabled={this.state.downloadContributions}
                       checked={!this.state.downloadContributions && this.state.format === "text"} 
                       onChange={(e, {value}) => this.setState({format: value})}
@@ -283,7 +283,7 @@ export default class extends React.Component {
                     saveAs(blob, 'karar_search_results.zip');
                   } else {
                     console.error(error);
-                    alert('Failed to find the contribution for download. Please try again soon or email KARAR using the link at the bottom of this page.');
+                    alert('Failed to find the contribution for download. Please try again soon or email KArAr using the link at the bottom of this page.');
                   }
                 }.bind(this));
               }.bind(this)}>

@@ -6,46 +6,46 @@ import {Helmet} from 'react-helmet';
 
 import {versions} from '/lib/configs/karar/data_models.js';
 import Page from '/client/modules/common/components/page';
-import KARARHome from '/client/modules/karar/components/home';
+import KArArHome from '/client/modules/karar/components/home';
 
-import KARARMenu from '/client/modules/karar/components/menu/menu';
-import KARARContact from '/client/modules/karar/components/menu/contact';
+import KArArMenu from '/client/modules/karar/components/menu/menu';
+import KArArContact from '/client/modules/karar/components/menu/contact';
 
 
-import KARARSearch from '/client/modules/karar/components/search';
-import KARARUploadContribution from '/client/modules/karar/components/upload_contribution';
-import KARARPrivateContributions from '/client/modules/karar/components/private_contributions';
-import KARARDataModel from '/client/modules/karar/components/data_model';
+import KArArSearch from '/client/modules/karar/components/search';
+import KArArUploadContribution from '/client/modules/karar/components/upload_contribution';
+import KArArPrivateContributions from '/client/modules/karar/components/private_contributions';
+import KArArDataModel from '/client/modules/karar/components/data_model';
 
-import KARARValidateContribution from '/client/modules/karar/components/validate_contribution';
+import KArArValidateContribution from '/client/modules/karar/components/validate_contribution';
 import Error from '/client/modules/common/components/error';
 
 const Routes = ({match}) => (
   <Switch>
 
     {/* Static Pages */}
-    <Route exact path="/KARAR" render={() =>
-      <Page portal="KARAR" menu={<KARARMenu/>}>
-        <Helmet><title>KARAR Home | EarthRef.org</title></Helmet>
-        <KARARHome/>
+    <Route exact path="/KArAr" render={() =>
+      <Page portal="KArAr" menu={<KArArMenu/>}>
+        <Helmet><title>KArAr Home | EarthRef.org</title></Helmet>
+        <KArArHome/>
       </Page>
     }/>
-    <Route exact path="/KARAR/contact" render={() =>
-      <Page portal="KARAR" menu={<KARARMenu/>}>
-        <Helmet><title>Contact KARAR | EarthRef.org</title></Helmet>
-        <KARARContact/>
+    <Route exact path="/KArAr/contact" render={() =>
+      <Page portal="KArAr" menu={<KArArMenu/>}>
+        <Helmet><title>Contact KArAr | EarthRef.org</title></Helmet>
+        <KArArContact/>
       </Page>
     }/>
 
     {/* Search Interface */}
-    <Route exact path="/KARAR/search" render={({location}) => {
+    <Route exact path="/KArAr/search" render={({location}) => {
       let redirectTo;
       if (_.trim(location.hash) !== '') {
         try {
           let oldSearchState = JSON.parse(atob(location.hash.substr(1)));
           if (oldSearchState && oldSearchState.p && oldSearchState.p.length >= 0)
             redirectTo = {
-              pathname: "/KARAR/search", 
+              pathname: "/KArAr/search", 
               state: {
                 search: `doi:"${oldSearchState.p[0]}"`
               }
@@ -54,38 +54,38 @@ const Routes = ({match}) => (
       }
       if (!redirectTo && location.search && location.search.length > 1) {
         redirectTo = {
-          pathname: "/KARAR/search", 
+          pathname: "/KArAr/search", 
           state: {
             search: location.search.substring(1)
           }
         };
       }
       return (redirectTo && <Redirect to={redirectTo}/> ||
-        <Page fullWidth portal="KARAR" menu={<KARARMenu/>}>
-          <Helmet><title>KARAR Search | EarthRef.org</title></Helmet>
-          <KARARSearch search={location.state && location.state.search || ""}/>
+        <Page fullWidth portal="KArAr" menu={<KArArMenu/>}>
+          <Helmet><title>KArAr Search | EarthRef.org</title></Helmet>
+          <KArArSearch search={location.state && location.state.search || ""}/>
         </Page>
       );
     }}/>
-    <Route exact path="/KARAR/:id(\d+)/:private_key([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})" render={({match, location}) =>
+    <Route exact path="/KArAr/:id(\d+)/:private_key([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})" render={({match, location}) =>
       <Redirect to={{
-        pathname: "/KARAR/search", 
+        pathname: "/KArAr/search", 
         state: {
           search: `id:"${match.params.id}" private_key:"${match.params.private_key}" ` + location.search || ""
         }
       }}/>
     }/>
-    <Route exact path="/KARAR/:id(\d+)" render={({match, location}) =>
+    <Route exact path="/KArAr/:id(\d+)" render={({match, location}) =>
       <Redirect to={{
-        pathname: "/KARAR/search", 
+        pathname: "/KArAr/search", 
         state: {
           search: `id:"${match.params.id}" ` + location.search || ""
         }
       }}/>
     }/>
-    <Route exact path="/KARAR/doi/:doi(.+)" render={({match, location}) =>
+    <Route exact path="/KArAr/doi/:doi(.+)" render={({match, location}) =>
       <Redirect to={{
-        pathname: "/KARAR/search", 
+        pathname: "/KArAr/search", 
         state: {
           search: `doi:"${match.params.doi}" ` + location.search || ""
         }
@@ -93,52 +93,52 @@ const Routes = ({match}) => (
     }/>
     
     {/* Other Tools */}
-    <Route exact path="/KARAR/validate" render={() =>
-      <Page portal="KARAR" title="Validate a KARAR contribution:" menu={<KARARMenu/>}>
+    <Route exact path="/KArAr/validate" render={() =>
+      <Page portal="KArAr" title="Validate a KArAr contribution:" menu={<KArArMenu/>}>
         <Helmet>
-          <title>KARAR Validator | EarthRef.org</title>
+          <title>KArAr Validator | EarthRef.org</title>
         </Helmet>
-        <KARARValidateContribution/>
+        <KArArValidateContribution/>
       </Page>
     }/>
 
-    <Route exact path="/KARAR/upload" render={() =>
-      <Page portal="KARAR" title="Upload data into your private workspace:" menu={<KARARMenu/>}>
+    <Route exact path="/KArAr/upload" render={() =>
+      <Page portal="KArAr" title="Upload data into your private workspace:" menu={<KArArMenu/>}>
         <Helmet>
-          <title>KARAR Uploader | EarthRef.org</title>
+          <title>KArAr Uploader | EarthRef.org</title>
         </Helmet>
-        <KARARUploadContribution/>
+        <KArArUploadContribution/>
       </Page>
     }/>
 
-    <Route exact path="/KARAR/private" render={({location}) =>
-      <Page portal="KARAR" title="Manage your contributions:" menu={<KARARMenu/>}>
+    <Route exact path="/KArAr/private" render={({location}) =>
+      <Page portal="KArAr" title="Manage your contributions:" menu={<KArArMenu/>}>
         <Helmet>
-          <title>KARAR Private Workspace | EarthRef.org</title>
+          <title>KArAr Private Workspace | EarthRef.org</title>
         </Helmet>
-        <KARARPrivateContributions/>
+        <KArArPrivateContributions/>
       </Page>
     }/>
 
-    <Redirect exact from="/KARAR/data-models" to={`/KARAR/data-models/${_.last(versions)}`}/>
-    <Route exact path="/KARAR/data-models/:v" render={({match, location}) => {
+    <Redirect exact from="/KArAr/data-models" to={`/KArAr/data-models/${_.last(versions)}`}/>
+    <Route exact path="/KArAr/data-models/:v" render={({match, location}) => {
       if (window.history.replaceState)
-        window.history.replaceState({}, 'KARAR Data Models | EarthRef.org', '/KARAR/data-models/' + match.params.v);    
+        window.history.replaceState({}, 'KArAr Data Models | EarthRef.org', '/KArAr/data-models/' + match.params.v);    
       return (
-        <Page portal="KARAR" title="Browse the current and recent KARAR Data Models:" menu={<KARARMenu/>}>
+        <Page portal="KArAr" title="Browse the current and recent KArAr Data Models:" menu={<KArArMenu/>}>
           <Helmet>
-            <title>KARAR Data Models | EarthRef.org</title>
+            <title>KArAr Data Models | EarthRef.org</title>
           </Helmet>
-          <KARARDataModel version={match.params.v} search={queryString.parse(location.search).q || ""}/>
+          <KArArDataModel version={match.params.v} search={queryString.parse(location.search).q || ""}/>
         </Page>
       );
     }}/>
     
     {/* 404 Not Found */}
     <Route render={() =>
-      <Page portal="KARAR" menu={<KARARMenu/>}>
+      <Page portal="KArAr" menu={<KArArMenu/>}>
         <Helmet>
-          <title>KARAR Error | EarthRef.org</title>
+          <title>KArAr Error | EarthRef.org</title>
         </Helmet>
         <Error title="Error 404: Sorry, this page is missing!"/>
       </Page>

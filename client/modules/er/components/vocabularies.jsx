@@ -60,7 +60,7 @@ export default class extends React.Component {
       $tbls.find('.vocabularies-table-count').each(function() {
         const $table = $(this).parents('.vocabularies-table');
         const n_match = $table.find('.vocabularies-column').not('.no-match').length;
-        $(this).addClass(portals['KARAR'].color);
+        $(this).addClass(portals['KArAr'].color);
         $(this).children('span').remove();
         $(this).prepend(`<span>${n_match} of </span>`);
         if (n_match === 0)
@@ -69,7 +69,7 @@ export default class extends React.Component {
           $table.removeClass('no-match');
       });
       $(this.refs['count']).html($cols.not('.no-match').length + ' of ' + $cols.length);
-      $(this.refs['count']).addClass(portals['KARAR'].color);
+      $(this.refs['count']).addClass(portals['KArAr'].color);
     }
 
     // Enable all columns since the search string is empty.
@@ -77,10 +77,10 @@ export default class extends React.Component {
       $tbls.removeClass('no-match');
       $cols.removeClass('no-match');
       const $counts = $tbls.find('.vocabularies-table-count, .vocabularies-group-count');
-      $counts.removeClass(portals['KARAR'].color);
+      $counts.removeClass(portals['KArAr'].color);
       $counts.children().remove();
       $(this.refs['count']).html($cols.length);
-      $(this.refs['count']).removeClass(portals['KARAR'].color);
+      $(this.refs['count']).removeClass(portals['KArAr'].color);
     }
 
     // If the search has up to 100 column matches or excludes an entire table,
@@ -146,8 +146,8 @@ export default class extends React.Component {
                     onChange={this.onSearchChange.bind(this)}
                   />
                   { this.state.search ?
-                    <i className={portals['KARAR'].color + ' close link icon'} onClick={this.clearSearch.bind(this)}/>:
-                    <i className={portals['KARAR'].color + ' search icon'}/>
+                    <i className={portals['KArAr'].color + ' close link icon'} onClick={this.clearSearch.bind(this)}/>:
+                    <i className={portals['KArAr'].color + ' search icon'}/>
                   }
                 </div>
                 <div className="results"></div>

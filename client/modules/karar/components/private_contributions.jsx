@@ -237,7 +237,7 @@ export default class extends React.Component {
           <div className="ui center aligned two column relaxed grid">
             <div className="column">
               <IconButton
-                className="borderless card" href="" portal="KARAR"
+                className="borderless card" href="" portal="KArAr"
                 onClick={() => location.href = "//earthref.org/log-out/?next_url=/log-in%3Fnext_url=" + window.location.href}
               >
                 <i className="icons">
@@ -252,7 +252,7 @@ export default class extends React.Component {
             </div>
             <div className="column">
               <IconButton
-                className="borderless card" href="" portal="KARAR"
+                className="borderless card" href="" portal="KArAr"
                 onClick={() => location.href = "//earthref.org/register/"}
               >
                 <i className="icons">
@@ -275,10 +275,10 @@ export default class extends React.Component {
     else return (
       <div>
         <div className="ui list" style={{margin: "0"}}>
-          <Link className={portals['KARAR'].color + ' ui icon button'} style={{float:'right', margin:'0 0 0.5em'}} to="/KARAR/upload">
+          <Link className={portals['KArAr'].color + ' ui icon button'} style={{float:'right', margin:'0 0 0.5em'}} to="/KArAr/upload">
             <i className="add icon"/> Upload Data Into Your Private Workspace
           </Link>
-          <button className={(this.state.activated ? '' : portals['KARAR'].color) + ' ui icon button'} style={{margin:'0 1em 0.5em 0'}} onClick={() => { this.setState({ activated: false }, this.updateContributions.bind(this))}}>
+          <button className={(this.state.activated ? '' : portals['KArAr'].color) + ' ui icon button'} style={{margin:'0 1em 0.5em 0'}} onClick={() => { this.setState({ activated: false }, this.updateContributions.bind(this))}}>
             <i className="edit icon"/> In Preparation
             <div className="ui circular small basic label" style={{color: '#0C0C0C', margin: '-1em -0.5em -1em 0.5em', minWidth: '4em'}}>
               <Count
@@ -289,7 +289,7 @@ export default class extends React.Component {
               />
             </div>
           </button>
-          <button className={(!this.state.activated ? '' : portals['KARAR'].color) + ' ui icon button'} style={{margin:'0 1em 0.5em 0'}} onClick={() => { this.setState({ activated: true }, this.updateContributions.bind(this))}}>
+          <button className={(!this.state.activated ? '' : portals['KArAr'].color) + ' ui icon button'} style={{margin:'0 1em 0.5em 0'}} onClick={() => { this.setState({ activated: true }, this.updateContributions.bind(this))}}>
             <i className="clipboard check icon"/> Made Public
             <div className="ui circular small basic label" style={{color: '#0C0C0C', margin: '-1em -0.5em -1em 0.5em', minWidth: '4em'}}>
               <Count
@@ -312,7 +312,7 @@ export default class extends React.Component {
             //console.log("ref", c, noReference);
             return (
               <div className="item" key={i} style={{marginBottom: "1.5em"}}>
-                <div className={portals["KARAR"].color + " ui top attached inverted segment"} style={{padding: "0.5em"}} ref={(el) => el && el.style.setProperty('width', 'calc(100% + 2px)', 'important')}>
+                <div className={portals["KArAr"].color + " ui top attached inverted segment"} style={{padding: "0.5em"}} ref={(el) => el && el.style.setProperty('width', 'calc(100% + 2px)', 'important')}>
                   <div style={{display: "flex", flexFlow: "row wrap"}}>
                     <div style={{flex: "1 1 auto"}}>
                       <div className="ui labeled fluid small input">
@@ -486,7 +486,7 @@ export default class extends React.Component {
                       </div>
                     }
                     {c.summary.contribution._is_activated !== "true" && c.summary.contribution._is_valid === "true" &&
-                      <div className={"ui small button " + (hasReference ? portals["KARAR"].color : "disabled red")} style={{margin: "0 0 0 0.5em"}}
+                      <div className={"ui small button " + (hasReference ? portals["KArAr"].color : "disabled red")} style={{margin: "0 0 0 0.5em"}}
                         onClick={(e) => {
                           this.validateThenActivate(c.summary.contribution.id);
                         }}
@@ -500,7 +500,7 @@ export default class extends React.Component {
                       </div>
                     }
                     {c.summary.contribution._is_activated === "true" && Meteor.isDevelopment && 
-                    <div className={portals["KARAR"].color + " ui basic small button"} style={{margin: "0 0 0 0.5em"}}
+                    <div className={portals["KArAr"].color + " ui basic small button"} style={{margin: "0 0 0 0.5em"}}
                         onClick={(e) => {
                           console.log("deactivating");
                           Meteor.call("esDeactivateContribution", {index: index, id: c.summary.contribution.id},

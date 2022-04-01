@@ -9,12 +9,12 @@ export default class extends React.Component {
     return (
       <div>
         <Item.Group divided>
-          <UserItem portal="KARAR" id="njarboe"/>
-          <UserItem portal="KARAR" id="rminnett"/>
-          <UserItem portal="KARAR" id="ljonestrask"/>
-          <UserItem portal="KARAR" id="cconstable"/>
-          <UserItem portal="KARAR" id="akoppers"/>
-          <UserItem portal="KARAR" id="ltauxe"/>
+          <UserItem portal="KArAr" id="njarboe"/>
+          <UserItem portal="KArAr" id="rminnett"/>
+          <UserItem portal="KArAr" id="ljonestrask"/>
+          <UserItem portal="KArAr" id="cconstable"/>
+          <UserItem portal="KArAr" id="akoppers"/>
+          <UserItem portal="KArAr" id="ltauxe"/>
         </Item.Group>
       </div>
 	  );
