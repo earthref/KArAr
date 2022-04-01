@@ -1,6 +1,6 @@
-# EarthRef's KARAR FIESTA Web Application
+# EarthRef's KArAr FIESTA Web Application
 
-A [Meteor](https://www.meteor.com) application for the EarthRef.org KARAR FIESTA Data Repository.
+A [Meteor](https://www.meteor.com) application for the EarthRef.org KArAr FIESTA Data Repository.
 
 ### Creating a Development Environment
 
