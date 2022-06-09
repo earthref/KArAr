@@ -315,9 +315,14 @@ export default function () {
             }]
           }
         });
-        if (isNaN(_.parseInt(next_id.body.hits.hits[0]._source.summary.contribution.id)))
-          throw new Error('Failed to retrieve new contribution ID.');
-        next_id = _.parseInt(next_id.body.hits.hits[0]._source.summary.contribution.id) + 1;
+        if (next_id.body.hits.hits.length === 0) {
+          next_id = 1;
+        }
+        else {
+          if (isNaN(_.parseInt(next_id.body.hits.hits[0]._source.summary.contribution.id)))
+            throw new Error('Failed to retrieve new contribution ID.');
+          next_id = _.parseInt(next_id.body.hits.hits[0]._source.summary.contribution.id) + 1;
+        }
 
         let timestamp = moment().utc().toISOString();
         let contributionSummary = {
