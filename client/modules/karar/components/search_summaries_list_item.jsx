@@ -82,7 +82,7 @@ class SearchSummariesListItem extends React.Component {
     return (
       <div style={{minWidth: 100, maxWidth: 100, marginRight: '1em', marginBottom: 5}}>
         {id &&
-          <button type="submit" className="ui basic tiny fluid compact icon header orange button"
+          <button type="submit" className="ui basic tiny fluid compact icon header blue button"
             style={{padding: '20px 0', height: '100px'}} onClick={function (id, e) {
               document.getElementById('downloadButton' + id).className = "ui spinner loading icon";
               Meteor.call('esGetContribution', {index, id}, function (id, error, c) {
@@ -103,7 +103,7 @@ class SearchSummariesListItem extends React.Component {
           <i id={'downloadButton' + id} className="ui file text outline icon"/> Download
         </button>}
         {!id &&
-        <button className="ui basic tiny fluid compact icon header orange disabled button" style={{padding:'20px 0', height:'100px'}}>
+        <button className="ui basic tiny fluid compact icon header blue disabled button" style={{padding:'20px 0', height:'100px'}}>
           <i className="ui file text outline icon"/> Download
         </button>}
       </div>
@@ -390,21 +390,21 @@ class SearchSummariesListItem extends React.Component {
                         <form action="//earthref.org/cgi-bin/z-download.cgi" method="post">
                           <input type="hidden" name="file_path" value={`/projects/earthref/local/oracle/earthref/magic/meteor/activated/magic_contribution_${v.id}.txt`}/>
                           <input type="hidden" name="file_name" value={`magic_contribution_${v.id}.txt`}/>
-                          <button type="submit" className={'ui basic tiny fluid icon compact orange button'} style={{marginTop:'0'}}>
+                          <button type="submit" className={'ui basic tiny fluid icon compact blue button'} style={{marginTop:'0'}}>
                             <i className="ui file text outline icon"/> Download
                           </button>
                         </form>}
                         {v.id && v.id >= 16282 &&
                         <a href={`//earthref.org/MagIC/download/${v.id}/magic_contribution_${v.id}.txt`} download>
                           <button
-                            className="ui basic tiny fluid compact icon orange button"
+                            className="ui basic tiny fluid compact icon blue button"
                             style={{marginTop:'0'}}
                           >
                             <i className="ui file text outline icon"/> Download
                           </button>
                         </a>}
                         {!v.id &&
-                        <button className="ui basic tiny fluid compact icon orange disabled button"
+                        <button className="ui basic tiny fluid compact icon blue disabled button"
                                 style={{marginTop:'0'}}>
                           <i className="ui file text outline icon"/> Download
                         </button>}

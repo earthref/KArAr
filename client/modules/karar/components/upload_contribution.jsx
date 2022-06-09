@@ -863,7 +863,7 @@ export default class UploadContribution extends React.Component {
                 <Dropzone ref="dropzone" className="upload-dropzone" onDrop={this.readFiles.bind(this)}>
                   <div className="ui center aligned two column relaxed grid">
                     <div className="column">
-                      <i className="huge orange folder open outline icon"/>
+                      <i className="huge blue folder open outline icon"/>
                       <h5>Click and select</h5>
                       <h5>files to upload.</h5>
                     </div>
@@ -871,7 +871,7 @@ export default class UploadContribution extends React.Component {
                       OR
                     </div>
                     <div className="column">
-                      <i className="huge orange external icon"/>
+                      <i className="huge blue external icon"/>
                       <h5>Drag and drop files</h5>
                       <h5>here to upload.</h5>
                     </div>
@@ -995,7 +995,7 @@ export default class UploadContribution extends React.Component {
                         <div className="description">
                           <div className={
                             (file.readErrors && file.readErrors.length > 0 ? 'error ' : '') +
-                            'ui tiny orange progress'
+                            'ui tiny blue progress'
                           }
                                data-percent={file.readProgress}>
                             <div className="bar"/>
@@ -1016,7 +1016,7 @@ export default class UploadContribution extends React.Component {
                             </table>
                             : undefined)}
                           <div className="ui labeled fluid action input">
-                            <div className="ui orange label">
+                            <div className="ui blue label">
                               Import File Type
                             </div>
                             <div className="ui fluid selection dropdown format-dropdown">
@@ -1192,7 +1192,7 @@ export default class UploadContribution extends React.Component {
                     }
                     <br/>
                     {!this.state.uploaded &&
-                      <div className={'ui fluid orange button' + (this.state._name.length > 0 && !this.state.summarizing && !this.state.uploading ? '' : ' disabled')}
+                      <div className={'ui fluid blue button' + (this.state._name.length > 0 && !this.state.summarizing && !this.state.uploading ? '' : ' disabled')}
                            onClick={this.upload.bind(this)}>
                         Upload to {this.state._id ? 'your existing private contribution: ' + this.state._name : 'a new private contribution: ' + this.state._name}
                       </div>
@@ -1205,7 +1205,7 @@ export default class UploadContribution extends React.Component {
         </div>
         {(step === 1 ?
           <div className="ui bottom attached icon message">
-            <i className="orange circle info icon"/>
+            <i className="blue circle info icon"/>
             <div className="content">
               The selected file or files can be partial or complete contributions.
             </div>
@@ -1213,7 +1213,7 @@ export default class UploadContribution extends React.Component {
           : undefined)}
         {(step === 2 && this.state.reading ?
         <div className="ui bottom attached icon message">
-          <i className="orange circle info icon"/>
+          <i className="blue circle info icon"/>
           <div className="content">
             Reading the selected {this.files.length === 1 ? ' file' : ' files'} ...
           </div>
@@ -1221,7 +1221,7 @@ export default class UploadContribution extends React.Component {
         : undefined)}
         {(step === 2 && this.state.parsing ?
           <div className="ui bottom attached icon message">
-            <i className="orange circle info icon"/>
+            <i className="blue circle info icon"/>
             <div className="content">
               Parsing the selected {this.files.length === 1 ? ' file' : ' files'} ...
             </div>
@@ -1264,14 +1264,14 @@ export default class UploadContribution extends React.Component {
             <div className="content">
               The {this.files.length === 1 ? ' file has' : ' files have'} valid column headers.
             </div>
-            <div className="ui right floated orange button" onClick={this.reviewUpload.bind(this)}>
+            <div className="ui right floated blue button" onClick={this.reviewUpload.bind(this)}>
               Upload
             </div>
           </div>
           : undefined)}
         {(step === 3 && !this.state.uploading && !this.state.uploadError && !this.state.uploaded ?
           <div className="ui bottom attached icon message">
-            <i className="orange circle info icon"/>
+            <i className="blue circle info icon"/>
             <div className="content">
               Select where to upload the {this.files.length === 1 ? ' file' : ' files'} to in your private workspace.
             </div>
@@ -1279,7 +1279,7 @@ export default class UploadContribution extends React.Component {
           : undefined)}
         {(step === 3 && this.state.uploading ?
           <div className="ui bottom attached icon message">
-            <i className="orange circle info icon"/>
+            <i className="blue circle info icon"/>
             <div className="content">
               Uploading the {this.files.length === 1 ? ' file' : ' files'} to
               {this.state._id ? ' your existing ' : ' a new '}

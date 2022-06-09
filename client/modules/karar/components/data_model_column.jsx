@@ -203,7 +203,7 @@ export default class extends React.Component {
     else if (validation === 'type("method_codes")') {
       return (
         <span>
-          <div className="ui orange horizontal small label">Vocabulary</div>
+          <div className="ui blue horizontal small label">Vocabulary</div>
           Any values in this column must contain a value found
           in the <Link to={'/KArAr/method-codes'}>Method Codes</Link> controlled vocabulary.
         </span>
@@ -216,7 +216,7 @@ export default class extends React.Component {
       else console.error(`cvs[${cv}].label is not defined.`);
       return (
         <span>
-          <div className="ui orange horizontal small label">Vocabulary</div>
+          <div className="ui blue horizontal small label">Vocabulary</div>
           Any values in this column must contain a value found
           in the <Link to={'/vocabularies/controlled/?q=' + encodeURI(cv)}>
             {cv_label}
@@ -231,7 +231,7 @@ export default class extends React.Component {
       else console.error(`svs[${sv}].label is not defined.`);
       return (
         <span>
-          <div className="ui orange horizontal small label">Vocabulary</div>
+          <div className="ui blue horizontal small label">Vocabulary</div>
           Any values in this column could contain a value found
           in the <Link to={'/vocabularies/suggested/?q=' + encodeURI(sv)}>
             {sv_label}
@@ -347,7 +347,7 @@ export default class extends React.Component {
           {(type || range || ref_validation || user_validation ?
             <div className="ui purple horizontal small label">Validation</div> : undefined)}
           {(cv_validation || mc_validation || sv_validation ?
-            <div className="ui orange horizontal small label">Vocabulary</div> : undefined)}
+            <div className="ui blue horizontal small label">Vocabulary</div> : undefined)}
           {(foundIn ?
             <div className="ui teal horizontal small label">Found In</div> : undefined)}
         </div>

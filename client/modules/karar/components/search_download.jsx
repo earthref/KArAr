@@ -264,19 +264,19 @@ export default class extends React.Component {
               will appear in your browser's download folder.
             </p>
             { this.state.progress !== undefined &&
-              <Progress percent={this.state.progress} color="orange" progress autoSuccess active={this.state.progress < 100}
+              <Progress percent={this.state.progress} color="blue" progress autoSuccess active={this.state.progress < 100}
                 style={{margin:0}}
               />
             }
           </div>
           <div className="actions">
           { this.state.downloadContributions && (this.state.progress === undefined || this.state.progress === 100) &&
-              <div className="ui button orange" onClick={this.downloadContributionFiles.bind(this)}>
+              <div className="ui button blue" onClick={this.downloadContributionFiles.bind(this)}>
                 Prepare Files
               </div>
             }
             { this.state.downloadContributions && (this.state.downloadIDs.length > 0 && this.state.progress === 100) &&
-              <button type="submit" className="ui button orange" onClick={function (e) {
+              <button type="submit" className="ui button blue" onClick={function (e) {
                 Meteor.call('kararGetPublicContributions', this.state.downloadIDs, 'karar_search_results.zip', '@' + Cookies.get('user_id', Meteor.isDevelopment ? {} : { domain: '.earthref.org'}), function (error, source) {
                   if (source) {
                     let blob = new Blob([source], {type: "application/zip"});
@@ -291,7 +291,7 @@ export default class extends React.Component {
               </button>
             }
             { !this.state.downloadContributions && (this.state.progress === undefined || this.state.progress === 100) &&
-              <div className="ui button orange" onClick={this.downloadLevelRows.bind(this)}>
+              <div className="ui button blue" onClick={this.downloadLevelRows.bind(this)}>
                 Download Rows
               </div>
             }
