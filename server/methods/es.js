@@ -414,7 +414,7 @@ export default function () {
         summary.contribution._is_valid = "false";
 
         // console.log("esUpdatePrivateContribution updating es index", index, contributor, _contributor, id, sizeof(summary), sizeof(contribution));
-        if (id == 16798) delete contribution.measurements;
+        // if (id == 16798) delete contribution.measurements;
         await esClient.update({
           "index": index,
           "type": "_doc",
@@ -1404,7 +1404,7 @@ export default function () {
             "query": { "term": { "id": id }}
           }
         });
-        console.log('esGetUserByID', resp);
+        // console.log('esGetUserByID', resp);
         let user = resp.body.hits.total.value > 0 ? resp.body.hits.hits[0]._source : undefined;
         user = __.omitDeep(user, /(^|\.)_/);
         user.handle = (user && user.handle) || `user${user.id}`;

@@ -356,7 +356,7 @@ export default class UploadContribution extends React.Component {
       for (let file of this.files) {
         if (file.imported) file.imported.map((data) => {
           if (data.table && data.columns && data.rows) {
-            if (data.table === 'measurements') {
+            /*if (data.table === 'measurements') {
               if (this.contribution.measurements !== undefined) {
                 file.parseErrors.push('There are more than one measurement tables in this file. Please combine them before uploading.');
               } else {
@@ -365,7 +365,7 @@ export default class UploadContribution extends React.Component {
                   rows: data.rows.map(row => _.without(row.map((x, idx) => data.columns[idx] !== undefined && x), false))
                 }
               }
-            } else {
+            } else {*/
               this.contribution[data.table] = this.contribution[data.table] || [];
               data.rows.map((row, i) =>
                 this.contribution[data.table].push(
@@ -375,7 +375,7 @@ export default class UploadContribution extends React.Component {
                   }, {})
                 )
               );
-            }
+            // }
           }
         });
       }

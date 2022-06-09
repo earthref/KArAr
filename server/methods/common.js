@@ -123,7 +123,7 @@ export default function () {
         }
         return __.omitDeep(user, /(^|\.)_/);
       } catch (error) {
-        console.error('orcidLogin Record Request', error);
+        // console.error('orcidLogin Record Request', error);
         throw new Meteor.Error(
           'Failed to retrieve your ORCID record.', 
           'Please retry logging in with ORCID. If you are still having trouble, please email us.'
