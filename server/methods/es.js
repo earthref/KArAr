@@ -169,7 +169,7 @@ export default function () {
         if (_.isArray(queries)) search.query.bool.must.push(...queries);
         if (_.isArray(filters)) search.query.bool.filter.push(...filters);
 
-        console.log("esPage search:", JSON.stringify(search));
+        // console.log("esPage search:", JSON.stringify(search));
         search.query.bool.filter.push({ term: { type }});
         let resp = await esClient.search({
           "index": index,
@@ -177,7 +177,7 @@ export default function () {
           "body": search,
           "timeout": "60s"
         });
-        console.log("esPage resp:", resp);
+        // console.log("esPage resp:", resp);
         return resp.body.hits.hits.map(hit => hit._source);
 
       } catch(error) {
@@ -520,8 +520,9 @@ export default function () {
                 return row;
               }) 
             }, (err, resp) => {
-              if (!resp || resp.errors) {
-                console.error('esUpdatePrivatePreSummaries errors in chunk', i+1, 'of', n, JSON.stringify(resp));
+              // console.log('esUpdatePrivatePreSummaries chunk resp', i+1, resp);
+              if (!resp || resp.body.errors) {
+                console.error('esUpdatePrivatePreSummaries errors in chunk', i+1, 'of', n, JSON.stringify(resp.body.items));
                 resolve(false);
               } else {
                 console.log('esUpdatePrivatePreSummaries finished chunk', i+1, 'of', n);
@@ -628,8 +629,8 @@ export default function () {
                 return row;
               }) 
             }, (err, resp) => {
-              if (!resp || resp.errors) {
-                console.error('esUpdatePrivateSummaries errors in chunk', i+1, 'of', n, JSON.stringify(resp));
+              if (!resp || resp.body.errors) {
+                console.error('esUpdatePrivateSummaries errors in chunk', i+1, 'of', n, JSON.stringify(resp.body.items));
                 resolve(false);
               } else {
                 console.log('esUpdatePrivateSummaries finished chunk', i+1, 'of', n);
@@ -665,7 +666,7 @@ export default function () {
             "size": 100,
             "_source": {
               "excludes": ["*.vals", "*._geo_shape", "summary._all.vadm_sigma.range"],
-              "includes": ["summary.contribution.*", "summary._all.*", "summary.kds.*", "summary._incomplete_summary"]
+              "includes": ["summary.contribution.*", "summary._all.*", "summary._incomplete_summary"]
             },
             "query": {
               "bool": {

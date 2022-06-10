@@ -647,26 +647,17 @@ export default class UploadContribution extends React.Component {
           if (_.isEmpty(summary) || !summary.contribution || !summary.contribution.summary ||
               !summary.contribution.summary[table] || table === 'contribution' || table === 'ages')
             return undefined;
-          let tableSummary = table === 'measurements' ? summary.contribution.summary.experiments : summary.contribution.summary[table];
-          let tableColumn = table === 'measurements' ? 'experiment' : table.replace(/s$/,'');
-          let tableName = table === 'measurements' ? 'Experiments' : models[_.last(versions)].tables[t].label;
+          let tableSummary = summary.contribution.summary[table];
+          let tableColumn = table.replace(/s$/,'');
+          let tableName = models[_.last(versions)].tables[t].label;
           let nRows = tableSummary[tableColumn] && tableSummary[tableColumn].length || 0; //(json && json[t] ? (json[t].rows ? json[t].rows.length : json[t].length) : 0);
           let n = tableSummary._n_results || 0; //(s && s[t] && _.keys(s[t]).length || 0);
-          let nExperiments = summary.contribution._all._n_measurements;
-          return ((nRows > 0 || n > 0 || nExperiments > 0) ?
+          return ((nRows > 0 || n > 0) ?
             <tr key={i}>
               <td><h4>{tableName}</h4></td>
               <td>{nRows > 0 && numeral(nRows).format('0,0')}</td>
-              {t === 'measurements' ?
-                <td className="right aligned">{nExperiments > 0 ? numeral(nExperiments).format('0,0') : undefined}</td>
-                :
-                <td className="right aligned">{(n > 0 ? numeral(n).format('0,0') : undefined)}</td>
-              }
-              {t === 'measurements' ?
-                <td>{nExperiments > 0 ? (nExperiments === 1 ? 'Experiment' : 'Experiments') : undefined}</td>
-                :
-                <td>{(n > 0 ? (n === 1 ? (t === 'criteria' ? 'Criterion' : tableName.slice(0, -1)) : tableName) : undefined)}</td>
-              }
+              <td className="right aligned">{(n > 0 ? numeral(n).format('0,0') : undefined)}</td>
+              <td>{(n > 0 ? (n === 1 ? (t === 'criteria' ? 'Criterion' : tableName.slice(0, -1)) : tableName) : undefined)}</td>
             </tr>
             : undefined);
         })}

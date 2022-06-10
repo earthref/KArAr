@@ -4,10 +4,16 @@ import moment from 'moment';
 import React from 'react';
 import PropTypes from 'prop-types';
 import saveAs from 'save-as';
+import { HotTable, HotColumn } from "@handsontable/react";
+import "handsontable/dist/handsontable.min.css";
 
 import Clamp from '/client/modules/common/components/clamp';
 import ExportContribution from '/lib/modules/karar/export_contribution.js';
+import GoogleStaticMap from '/client/modules/common/components/google_static_map';
 import GoogleMap from '/client/modules/common/components/google_map';
+import Count from '/client/modules/common/components/count';
+import { Button, Modal } from 'semantic-ui-react';
+import {versions, models} from '/lib/configs/karar/data_models.js';
 import {index} from '/lib/configs/karar/search_levels.js';
 
 class SearchSummariesListItem extends React.Component {
@@ -16,10 +22,20 @@ class SearchSummariesListItem extends React.Component {
     super(props);
     this.state = {
       loaded: false,
-      loadMap: false
+      loadMap: false,
+      showDataModal: false,
+      showConfirmCloseEditedDataModal: false,
+      showConfirmChangeTabsEditedDataModal: false,
+      confirmChangeTabsDataLevel: undefined,
+      dataLoading: false,
+      dataEdited: false,
+      dataSaving: false,
+      dataLevel: undefined,
+      contributionData: undefined,
+      contributionDataError: undefined
     };
     this.styles = {
-      a: {cursor: 'pointer', color: '#bb4b1c'}
+      a: {cursor: 'pointer', color: '#3030bb'}
     }
   }
 
@@ -47,30 +63,30 @@ class SearchSummariesListItem extends React.Component {
     if (this.props.table === 'contribution' && item.summary && item.summary.contribution && item.summary.contribution._reference) {
       title = item.summary.contribution._reference.title;
     }
-    if (this.props.table === 'locations' && item.summary && item.summary._all) {
-      if (item.summary._all.location) title += ' ⇒ <b>' + item.summary._all.location[0] + '</b>';
-    }
     if (this.props.table === 'sites' && item.summary && item.summary._all) {
-      if (item.summary._all.location) title += ' ⇒ ' + item.summary._all.location[0];
       if (item.summary._all.site) title += ' ⇒ <b>' + item.summary._all.site[0] + '</b>';
     }
     if (this.props.table === 'samples' && item.summary && item.summary._all) {
-      if (item.summary._all.location) title += ' ⇒ ' + item.summary._all.location[0];
       if (item.summary._all.site) title += ' ⇒ ' + item.summary._all.site[0];
       if (item.summary._all.sample) title += ' ⇒ <b>' + item.summary._all.sample[0] + '</b>';
     }
     if (this.props.table === 'specimens' && item.summary && item.summary._all) {
-      if (item.summary._all.location) title += ' ⇒ ' + item.summary._all.location[0];
       if (item.summary._all.site) title += ' ⇒ ' + item.summary._all.site[0];
       if (item.summary._all.sample) title += ' ⇒ ' + item.summary._all.sample[0];
       if (item.summary._all.specimen) title += ' ⇒ <b>' + item.summary._all.specimen[0] + '</b>';
     }
     if (this.props.table === 'experiments' && item.summary && item.summary._all) {
-      if (item.summary._all.location) title += ' ⇒ ' + item.summary._all.location[0];
       if (item.summary._all.site) title += ' ⇒ ' + item.summary._all.site[0];
       if (item.summary._all.sample) title += ' ⇒ ' + item.summary._all.sample[0];
       if (item.summary._all.specimen) title += ' ⇒ ' + item.summary._all.specimen[0];
       if (item.summary._all.experiment) title += ' ⇒ <b>' + item.summary._all.experiment[0] + '</b>';
+    }
+    if (this.props.table === 'measurements' && item.summary && item.summary._all) {
+      if (item.summary._all.site) title += ' ⇒ ' + item.summary._all.site[0];
+      if (item.summary._all.sample) title += ' ⇒ ' + item.summary._all.sample[0];
+      if (item.summary._all.specimen) title += ' ⇒ ' + item.summary._all.specimen[0];
+      if (item.summary._all.experiment) title += ' ⇒ ' + item.summary._all.experiment[0];
+      if (item.summary._all.measurement) title += ' ⇒ <b>' + item.summary._all.measurement[0] + '</b>';
     }
     return <div style={{whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden"}} dangerouslySetInnerHTML={{__html: title}}/>;
   }
@@ -149,22 +165,49 @@ class SearchSummariesListItem extends React.Component {
   renderCounts(item) {
     let counts = [];
     let labels = [];
-    if (item.summary && item.summary._all && item.summary._all._n_kds) {
-      let count = item.summary._all._n_kds;
-      counts.push(count);
-      labels.push('Kd' + (count !== 1 ? 's' : ''));
-    }
+    let levels = [];
+    ['Site', 'Sample', 'Specimen', 'Experiment', 'Measurement'].forEach(label => {
+      let level = label.toLowerCase() + 's';
+      let name = label.toLowerCase();
+      if (item.summary && item.summary._all && item.summary._all['_n_' + level]) {
+        let count = item.summary._all['_n_' + level];
+        counts.push(count);
+        labels.push(label + (count !== 1 ? 's' : ''));
+        levels.push(level);
+      } else if (item.summary && item.summary._all && item.summary._all[name] && item.summary._all[name].length) {
+        let count = item.summary._all[name].length;
+        counts.push(count);
+        labels.push(label + (count !== 1 ? 's' : ''));
+        levels.push(level);
+      }
+    });
     return (
-      <div style={{minWidth: 50, maxWidth: 50, marginRight: '1em', marginBottom: 5, fontSize:'small', lineHeight:1}}>
+      <div style={{minWidth: 135, maxWidth: 135, marginRight: '1em', marginBottom: 5, fontSize:'small', lineHeight:1}}>
         <table><tbody>
           {counts.map((count, i) => {
             return (
               <tr key={i}>
                 <td style={{textAlign: 'right'}}>
-                  {numeral(count).format('0 a')}
+                  { this.props.table === 'contribution' ?
+                    <a onClick={() => {
+                      this.setState({ dataLevel: levels[i], showDataModal: true });
+                    }}>
+                      {numeral(count).format('0 a')}
+                    </a>
+                  :
+                    numeral(count).format('0 a')
+                  }
                 </td>
                 <td>
-                  &nbsp;{labels[i]}
+                  { this.props.table === 'contribution' ?
+                    <a onClick={() => {
+                      this.setState({ dataLevel: levels[i], showDataModal: true });
+                    }}>
+                      &nbsp;{labels[i]}
+                    </a>
+                  :
+                    <span>&nbsp;{labels[i]}</span>
+                }
                 </td>
               </tr>
             );
@@ -182,69 +225,199 @@ class SearchSummariesListItem extends React.Component {
     );
   }
 
-  renderKd(item) {
+  
+  renderMapThumbnail(item) {
 
-    let tableSummary = item.summary && item.summary.kds;
+    let paths = [];
 
-    if (!(tableSummary && (tableSummary.kd || tableSummary.kd_low || tableSummary.kd_high))) return (
-      <div style={{minWidth: 75, maxWidth: 75, marginRight: '1em', marginBottom: 5, fontSize:'small', color:'#AAAAAA', textAlign:'center', overflow:'hidden', textOverflow:'ellipsis'}}>
-        <br/>No<br/><b>Partition</b><br/><b>Coefficient</b><br/>Data<br/><br/>
+    let tableSummary = item.summary && item.summary[this.props.table];
+    let allSummary   = item.summary && item.summary._all;
+
+    if (tableSummary && (tableSummary._geo_envelope || tableSummary._geo_point)) {
+      //if (tableSummary._geo_envelope) 
+      //  _.sortedUniqBy(
+      //    _.sortBy(tableSummary._geo_envelope, 
+      //      x => _.flatten(x.coordinates).join('_')),
+      //    x => _.flatten(x.coordinates).join('_'))
+      //  .forEach(envelope => {
+      //    paths.push({
+      //      lat_s: envelope.coordinates[0][1],
+      //      lat_n: envelope.coordinates[1][1],
+      //      lon_w: envelope.coordinates[0][0],
+      //      lon_e: envelope.coordinates[1][0]
+      //    });
+      //  });
+
+      if (tableSummary._geo_point) 
+        _.sortedUniqBy(
+          _.sortBy(tableSummary._geo_point, 
+            x => _.flatten(x.coordinates).join('_')),
+          x => _.flatten(x.coordinates).join('_'))
+        .forEach(point => {
+          paths.push({
+            lat_s: point.coordinates[1],
+            lat_n: point.coordinates[1],
+            lon_w: point.coordinates[0],
+            lon_e: point.coordinates[0]
+          });
+        });
+    } else if (allSummary) {
+      if (allSummary._geo_envelope) 
+        _.sortedUniqBy(
+          _.sortBy(allSummary._geo_envelope, 
+            x => _.flatten(x.coordinates).join('_')),
+          x => _.flatten(x.coordinates).join('_'))
+        .forEach(envelope => {
+          paths.push({
+            lat_s: envelope.coordinates[0][1],
+            lat_n: envelope.coordinates[1][1],
+            lon_w: envelope.coordinates[0][0],
+            lon_e: envelope.coordinates[1][0]
+          });
+        });
+
+      if (allSummary._geo_point) 
+        _.sortedUniqBy(
+          _.sortBy(allSummary._geo_point, 
+            x => _.flatten(x.coordinates).join('_')), 
+          x => _.flatten(x.coordinates).join('_'))
+        .forEach(point => {
+          paths.push({
+            lat_s: point.coordinates[1],
+            lat_n: point.coordinates[1],
+            lon_w: point.coordinates[0],
+            lon_e: point.coordinates[0]
+          });
+        });
+    }
+
+    return paths.length > 0 ? (
+      <div style={{minWidth: 100, maxWidth: 100, marginRight: '1em', marginBottom: 5}}>
+        {paths.length > 0 &&
+          <a className="ui tiny image" style={{ cursor:'pointer' }} onClick={this.showMap.bind(this)}>
+            <GoogleStaticMap
+              width={100}
+              height={100}
+              paths={paths}
+            />
+          </a>}
+      </div>
+    ) : (
+      <div style={{minWidth: 100, maxWidth: 100, marginRight: '1em', marginBottom: 5, fontSize:'small', color:'#AAAAAA', textAlign:'center', overflow:'hidden', textOverflow:'ellipsis'}}>
+        <br/>No<br/><b>Geospatial</b><br/>Data<br/><br/>
       </div>
     );
 
-    let n_kds = tableSummary.kd && tableSummary.kd.n || 0,
-        n_kd_ranges = (tableSummary.kd_low || tableSummary.kd_high) && Math.max(tableSummary.kd_low && tableSummary.kd_low.n || 0, tableSummary.kd_high && tableSummary.kd_high.n || 0);
-    let types     = tableSummary.kd_types;
-    let definitions = tableSummary.kd_definition;
+  }
+
+  renderAge(item) {
+
+    let tableSummary = item.summary && item.summary[this.props.table];
+    let allSummary   = item.summary && item.summary._all;
+
+    if (!(tableSummary && tableSummary._age_range_ybp) && !(allSummary && allSummary._age_range_ybp)) return (
+      <div style={{minWidth: 120, maxWidth: 120, marginRight: '1em', marginBottom: 5, fontSize:'small', color:'#AAAAAA', textAlign:'center', overflow:'hidden', textOverflow:'ellipsis'}}>
+        <br/>No<br/><b>Age</b><br/>Data<br/><br/>
+      </div>
+    );
+
+    let min_ages  = (tableSummary && tableSummary._age_range_ybp && tableSummary._age_range_ybp.range.gte) || (allSummary._age_range_ybp && allSummary._age_range_ybp.range.gte),
+        max_ages  = (tableSummary && tableSummary._age_range_ybp && tableSummary._age_range_ybp.range.lte) || (allSummary._age_range_ybp && allSummary._age_range_ybp.range.lte),
+        n_ages    = (tableSummary && tableSummary._age_range_ybp && tableSummary._age_range_ybp.n        ) || (allSummary._age_range_ybp && allSummary._age_range_ybp.n),
+        age_range;
+
+    if (max_ages >= 1e9) {
+      max_ages = numeral(max_ages/1e9).format('0[.]0[00]');
+      min_ages = min_ages < 1e5 ? '0' : numeral(min_ages/1e9).format('0[.]0[00]');
+      age_range = max_ages === min_ages ? `${max_ages} Ga` : `${min_ages} - ${max_ages} Ga`;
+    }
+    else if (max_ages >= 1e6) {
+      max_ages = numeral(max_ages/1e6).format('0[.]0[00]');
+      min_ages = min_ages < 1e3 ? '0' : numeral(min_ages/1e6).format('0[.]0[00]');
+      age_range = max_ages === min_ages ? `${max_ages} Ma` : `${min_ages} - ${max_ages} Ma`;
+    }
+    else if (max_ages >= 1e3) {
+      max_ages = numeral(max_ages/1e3).format('0[.]0[00]');
+      min_ages = min_ages < 1e1 ? '0' : numeral(min_ages/1e3).format('0[.]0[00]');
+      age_range = max_ages === min_ages ? `${max_ages} ka` : `${min_ages} - ${max_ages} ka`;
+    }
+    else {
+      let max_ages_unit = max_ages >= 1949.5 ? 'BC' : 'AD';
+      let min_ages_unit = min_ages >= 1949.5 ? 'BC' : 'AD';
+      max_ages = max_ages >= 1949.5 ? numeral(max_ages - 1949).format('0[.]0[00]') : numeral(1950 - max_ages).format('0[.]0[00]');
+      min_ages = min_ages >= 1949.5 ? numeral(min_ages - 1949).format('0[.]0[00]') : numeral(1950 - min_ages).format('0[.]0[00]');
+      age_range = age_range || max_ages_unit === min_ages_unit && max_ages === min_ages && `${max_ages} ${max_ages_unit}`;
+      age_range = age_range || max_ages_unit === min_ages_unit && max_ages !== min_ages && `${max_ages} - ${min_ages} ${max_ages_unit}`;
+      age_range = age_range || max_ages_unit !== min_ages_unit                          && `${max_ages} ${max_ages_unit} - ${min_ages} ${min_ages_unit}`;
+    }
+
     return (
-      <div style={{minWidth: 125, maxWidth: 125, marginRight: '1em', marginBottom: 5, fontSize:'small', overflow:'hidden', textOverflow:'ellipsis'}}>
-        {n_kds > 0 ? <span><b>{n_kds}</b> Kd Value{n_kds > 1 ? 's' : ''}</span> : undefined}
-        {n_kds > 0 && n_kd_ranges > 0 && <br/>}
-        {n_kd_ranges > 0 ? <span><b>{n_kd_ranges}</b> Kd Range{n_kd_ranges > 1 ? 's' : ''}</span> : undefined}
-        <br/>
-        {types && types.length > 0 ?
+      <div style={{minWidth: 120, maxWidth: 120, marginRight: '1em', marginBottom: 5, fontSize:'small', overflow:'hidden', textOverflow:'ellipsis'}}>
+        <b>Age:</b><br/>{age_range}
+      </div>
+    );
+  }
+
+  renderGeo(item) {
+    let geologic = ['plate_blocks', 'terranes', 'geological_province_sections', 'tectonic_settings'];
+    geologic = _.reduce(geologic, (list, column) => {
+      if (item.summary && item.summary._all && item.summary._all[column]) list.push(...item.summary._all[column]);
+      return list;
+    }, []);
+    let geographic = ['continent_ocean', 'country', 'ocean_sea', 'region', 'village_city', 'location', 'location_type', 'location_alternatives'];
+    geographic = _.reduce(geographic, (list, column) => {
+      if (item.summary && item.summary._all && item.summary._all[column]) list.push(...item.summary._all[column]);
+      return list;
+    }, []);
+    return geologic.length > 0 || geographic.length > 0 ? (
+      <div style={{minWidth: 125, maxWidth: 125, marginRight: '1em', marginBottom: 5, fontSize:'small', whiteSpace: 'normal'}}>
+        {geologic.length > 0 ?
           <span>
-            <b>Kd Types:</b>
-            <Clamp lines={1}><span>{types.join(', ')}</span></Clamp>
+            <b>Geologic:</b>
+            <Clamp lines={geographic.length > 0 ? 2 : 5}><span>{geologic.join(', ')}</span></Clamp>
           </span> : undefined}
-        {definitions && definitions.length > 0 ?
+        {geographic.length > 0 ?
           <span>
-            <b>Kd Definitions:</b>
-            <Clamp lines={1}><span>{definitions.join(', ')}</span></Clamp>
+            <b>Geographic:</b>
+            <Clamp lines={geologic.length > 0 ? 2 : 5}><span>{geographic.join(', ')}</span></Clamp>
           </span> : undefined}
+      </div>
+    ) : (
+      <div style={{minWidth: 125, maxWidth: 125, marginRight: '1em', marginBottom: 5, fontSize:'small', color:'#AAAAAA', textAlign:'center', overflow:'hidden', textOverflow:'ellipsis'}}>
+        <br/>No<br/><b>Geographic</b><br/>Data<br/><br/>
       </div>
     );
   }
 
   renderGeology(item) {
-    let rock_types = item.summary && item.summary.kds && item.summary.kds.rock_types;
-    let minerals   = item.summary && item.summary.kds && item.summary.kds.minerals;
-    let elements      = item.summary && item.summary.kds && item.summary.kds._element_name;
-    let nDefined = _.without([rock_types, minerals, elements], undefined).length;
+    let geologic_classes = item.summary && item.summary._all && item.summary._all.geologic_classes;
+    let geologic_types   = item.summary && item.summary._all && item.summary._all.geologic_types;
+    let lithologies      = item.summary && item.summary._all && item.summary._all.lithologies;
+    let nDefined = _.without([geologic_classes, geologic_types, lithologies], undefined).length;
     let clampLines = (nDefined === 3 ? 1 : (nDefined === 2 ? 2 : 5));
-    return (rock_types && rock_types.length > 0) ||
-      (minerals && minerals.length > 0) ||
-      (elements && elements.length > 0) ?
+    return (geologic_classes && geologic_classes.length > 0) ||
+      (geologic_types && geologic_types.length > 0) ||
+      (lithologies && lithologies.length > 0) ?
     (
-      <div style={{minWidth: 175, maxWidth: 175, marginRight: '1em', marginBottom: 5, fontSize:'small', whiteSpace: 'normal'}}>
-        {rock_types && rock_types.length > 0 ?
+      <div style={{minWidth: 125, maxWidth: 125, marginRight: '1em', marginBottom: 5, fontSize:'small', whiteSpace: 'normal'}}>
+        {geologic_classes && geologic_classes.length > 0 ?
           <span>
-            <b>Rock Types:</b>
-            <Clamp lines={clampLines}><span>{rock_types.join(', ')}</span></Clamp>
+            <b>Class:</b>
+            <Clamp lines={clampLines}><span>{geologic_classes.join(', ')}</span></Clamp>
           </span> : undefined}
-        {minerals && minerals.length > 0 ?
+        {geologic_types && geologic_types.length > 0 ?
           <span>
-            <b>Minerals:</b>
-            <Clamp lines={clampLines}><span>{minerals.join(', ')}</span></Clamp>
+            <b>Type:</b>
+            <Clamp lines={clampLines}><span>{geologic_types.join(', ')}</span></Clamp>
           </span> : undefined}
-        {elements && elements.length > 0 ?
+        {lithologies && lithologies.length > 0 ?
           <span>
-            <b>Elements:</b>
-            <Clamp lines={clampLines}><span>{elements.join(', ')}</span></Clamp>
+            <b>Lithology:</b>
+            <Clamp lines={clampLines}><span>{lithologies.join(', ')}</span></Clamp>
           </span> : undefined}
       </div>
     ) : (
-      <div style={{minWidth: 175, maxWidth: 175, marginRight: '1em', marginBottom: 5, fontSize:'small', color:'#AAAAAA', textAlign:'center', overflow:'hidden', textOverflow:'ellipsis'}}>
+      <div style={{minWidth: 125, maxWidth: 125, marginRight: '1em', marginBottom: 5, fontSize:'small', color:'#AAAAAA', textAlign:'center', overflow:'hidden', textOverflow:'ellipsis'}}>
         <br/>No<br/><b>Geologic</b><br/>Data<br/><br/>
       </div>
     );
@@ -313,14 +486,14 @@ class SearchSummariesListItem extends React.Component {
                 <div className="row accordion-trigger" style={{display:'flex', padding:'0 1em 0.5em'}}>
                   <span style={{
                     fontSize:'small', fontWeight:'bold',
-                    color: !_is_activated && Meteor.isDevelopment ? '#9F3A38' : 'default'
+                    color: !_is_activated && Meteor.isDevelopment ? '#3030BB' : 'default'
                   }}>
                     {item.summary.contribution && item.summary.contribution._reference && item.summary.contribution._reference.citation || 'Unknown'}
                     {item.summary.contribution && item.summary.contribution.version && <span>&nbsp;v.&nbsp;{item.summary.contribution.version}</span>}
                   </span>
                   <span style={{
                     fontSize:'small', flex:'1', height:'1.25em', overflow:'hidden', textOverflow:'ellipsis', margin: '0 0.5em',
-                    color: !_is_activated && Meteor.isDevelopment ? '#9F3A38' : 'default'
+                    color: !_is_activated && Meteor.isDevelopment ? '#3030BB' : 'default'
                   }}>
                     {this.renderTitle(item)}
                   </span>
@@ -335,8 +508,12 @@ class SearchSummariesListItem extends React.Component {
                     {this.renderDownloadButton(item)}
                     {this.renderLinks(item)}
                     {this.renderCounts(item)}
+                    {this.renderMapThumbnail(item)}
+                    {this.renderGeo(item)}
                     {this.renderGeology(item)}
-                    {this.renderKd(item)}
+                    {this.renderAge(item)}
+                    {this.renderMethodCodes(item)}
+                    {this.renderCitations(item)}
                   </div>
                 :
                   <div className="row flex_row" style={{padding:'0', fontWeight:'normal', whiteSpace:'nowrap', display:'flex'}}>
@@ -553,6 +730,7 @@ class SearchSummariesListItem extends React.Component {
               <i className="caret up icon"></i>
             </div>
             {this.state.loadMap && this.renderMapModal(item)}
+            {this.state.showDataModal && this.renderDataModal(item)}
           </div>
         </div>
       );
@@ -575,106 +753,359 @@ class SearchSummariesListItem extends React.Component {
     );
   }
 
-  renderDataModal() {
+  renderDataModal(item) {
+    const citation = item.summary && item.summary.contribution && item.summary.contribution._reference && item.summary.contribution._reference.citation;
+    const name = item.summary && item.summary.contribution && item.summary.contribution._name;
+    const isPrivate = item.summary && item.summary.contribution && item.summary.contribution._is_activated !== 'true';
     return (
-      <div ref="data modal" className="ui fullscreen basic modal">
-        <i className="close icon" style={{color: 'white', top:'.5rem', right: '0'}}></i>
-        <div className="ui top attached inverted tabular menu">
-          <a className="item" href="#">
-            Locations
-          </a>
-          <a className="active item" href="#">
-            Sites
-          </a>
-          <a className="item" href="#">
-            Samples
-          </a>
-          <a className="item" href="#">
-            Specimens
-          </a>
-          <a className="item" href="#">
-            Experiments
-          </a>
-        </div>
-        <div className="ui bottom attached segment" style={{overflow:'auto', height:'calc(100vh - 10em)'}}>
-          {this.renderData()}
-        </div>
-      </div>
+      <Modal
+        onClose={() => this.setState(this.state.dataEdited ? { showConfirmCloseEditedDataModal: true } : { showDataModal: false })}
+        open={true}
+        style={{ width: 'calc(100vw - 4em)' }}
+      >
+        <Modal.Header>
+          <i 
+            className="close icon" 
+            onClick={() => this.setState(this.state.dataEdited ? { showConfirmCloseEditedDataModal: true } : { showDataModal: false })}
+            style={{ cursor:'pointer', float: 'right' }}
+          />
+          {citation || name || "Unnamed"} - Contribution Data
+        </Modal.Header>
+        <Modal.Content>
+          <div className="ui top attached tabular small menu search-tab-menu">
+            { this.state.contributionData && this.state.contributionData.sites ?
+              <a 
+                className={`${this.state.dataLevel === 'sites' ? 'active ' : ''}item`} 
+                style={this.state.dataLevel === 'sites' ? {backgroundColor: '#F0F0F0'} : {}}
+                onClick={() => this.setState(this.state.dataEdited ? 
+                  { showConfirmChangeTabsEditedDataModal: true, confirmChangeTabsDataLevel: 'sites' } : 
+                  { dataLoading: true, dataLevel: 'sites' }
+              )}
+              >
+                Sites
+                <div className="ui circular small basic label" style={{color: '#0C0C0C', margin: '-1em -1em -1em 0.5em', minWidth: '4em'}}>
+                  <Count count={ this.state.contributionData.sites.length }/>
+                </div>
+              </a>
+            :
+              <div 
+                className={`${this.state.dataLevel === 'sites' ? 'active ' : ''}disabled item`} 
+                style={this.state.dataLevel === 'sites' ? {backgroundColor: '#F0F0F0'} : {}}
+              >
+                Sites
+                <div className="ui circular small basic label" style={{color: '#0C0C0C', margin: '-1em -1em -1em 0.5em', minWidth: '4em'}}>
+                  { this.state.contributionData ? '0' : '?' }
+                </div>
+              </div>
+            }
+            { this.state.contributionData && this.state.contributionData.samples ?
+              <a 
+                className={`${this.state.dataLevel === 'samples' ? 'active ' : ''}item`} 
+                style={this.state.dataLevel === 'samples' ? {backgroundColor: '#F0F0F0'} : {}}
+                onClick={() => this.setState(this.state.dataEdited ? 
+                  { showConfirmChangeTabsEditedDataModal: true, confirmChangeTabsDataLevel: 'samples' } : 
+                  { dataLoading: true, dataLevel: 'samples' }
+                )}
+              >
+                Samples
+                <div className="ui circular small basic label" style={{color: '#0C0C0C', margin: '-1em -1em -1em 0.5em', minWidth: '4em'}}>
+                  <Count count={ this.state.contributionData.samples.length }/>
+                </div>
+              </a>
+            :
+              <div 
+                className={`${this.state.dataLevel === 'samples' ? 'active ' : ''}disabled item`} 
+                style={this.state.dataLevel === 'samples' ? {backgroundColor: '#F0F0F0'} : {}}
+              >
+                Samples
+                <div className="ui circular small basic label" style={{color: '#0C0C0C', margin: '-1em -1em -1em 0.5em', minWidth: '4em'}}>
+                  { this.state.contributionData ? '0' : '?' }
+                </div>
+              </div>
+            }
+            { this.state.contributionData && this.state.contributionData.specimens ?
+              <a 
+                className={`${this.state.dataLevel === 'specimens' ? 'active ' : ''}item`} 
+                style={this.state.dataLevel === 'specimens' ? {backgroundColor: '#F0F0F0'} : {}}
+                onClick={() => this.setState(this.state.dataEdited ? 
+                  { showConfirmChangeTabsEditedDataModal: true } : 
+                  { dataLoading: true, dataLevel: 'specimens', confirmChangeTabsDataLevel: 'specimens' }
+                  )}
+              >
+                Specimens
+                <div className="ui circular small basic label" style={{color: '#0C0C0C', margin: '-1em -1em -1em 0.5em', minWidth: '4em'}}>
+                  <Count count={ this.state.contributionData.specimens.length }/>
+                </div>
+              </a>
+            :
+              <div 
+                className={`${this.state.dataLevel === 'specimens' ? 'active ' : ''}disabled item`} 
+                style={this.state.dataLevel === 'specimens' ? {backgroundColor: '#F0F0F0'} : {}}
+              >
+                Specimens
+                <div className="ui circular small basic label" style={{color: '#0C0C0C', margin: '-1em -1em -1em 0.5em', minWidth: '4em'}}>
+                  { this.state.contributionData ? '0' : '?' }
+                </div>
+              </div>
+            }
+            { this.state.contributionData && this.state.contributionData.experiments ?
+              <a 
+                className={`${this.state.dataLevel === 'experiments' ? 'active ' : ''}item`} 
+                style={this.state.dataLevel === 'experiments' ? {backgroundColor: '#F0F0F0'} : {}}
+                onClick={() => this.setState(this.state.dataEdited ? 
+                  { showConfirmChangeTabsEditedDataModal: true } : 
+                  { dataLoading: true, dataLevel: 'experiments', confirmChangeTabsDataLevel: 'experiments' }
+                  )}
+              >
+                Experiments
+                <div className="ui circular small basic label" style={{color: '#0C0C0C', margin: '-1em -1em -1em 0.5em', minWidth: '4em'}}>
+                  <Count count={ this.state.contributionData.experiments.length }/>
+                </div>
+              </a>
+            :
+              <div 
+                className={`${this.state.dataLevel === 'experiments' ? 'active ' : ''}disabled item`} 
+                style={this.state.dataLevel === 'experiments' ? {backgroundColor: '#F0F0F0'} : {}}
+              >
+                Experiments
+                <div className="ui circular small basic label" style={{color: '#0C0C0C', margin: '-1em -1em -1em 0.5em', minWidth: '4em'}}>
+                  { this.state.contributionData ? '0' : '?' }
+                </div>
+              </div>
+            }
+            { this.state.contributionData && this.state.contributionData.measurements ?
+              <a 
+                className={`${this.state.dataLevel === 'measurements' ? 'active ' : ''}item`} 
+                style={this.state.dataLevel === 'measurements' ? {backgroundColor: '#F0F0F0'} : {}}
+                onClick={() => this.setState(this.state.dataEdited ? 
+                  { showConfirmChangeTabsEditedDataModal: true } : 
+                  { dataLoading: true, dataLevel: 'measurements', confirmChangeTabsDataLevel: 'measurements' }
+                  )}
+              >
+                Mpecimens
+                <div className="ui circular small basic label" style={{color: '#0C0C0C', margin: '-1em -1em -1em 0.5em', minWidth: '4em'}}>
+                  <Count count={ this.state.contributionData.measurements.length }/>
+                </div>
+              </a>
+            :
+              <div 
+                className={`${this.state.dataLevel === 'measurements' ? 'active ' : ''}disabled item`} 
+                style={this.state.dataLevel === 'measurements' ? {backgroundColor: '#F0F0F0'} : {}}
+              >
+                Measurements
+                <div className="ui circular small basic label" style={{color: '#0C0C0C', margin: '-1em -1em -1em 0.5em', minWidth: '4em'}}>
+                  { this.state.contributionData ? '0' : '?' }
+                </div>
+              </div>
+            }
+          </div>
+          {this.renderData(item)}
+          <Modal size="small"
+            onClose={() => this.setState({ showConfirmCloseEditedDataModal: false })}
+            open={this.state.showConfirmCloseEditedDataModal}
+            content="Closing the Contribution Data tables will cancel edits made to this table."
+            actions={[
+              { content: 'Cancel Edits and Close', key: 'cancel', negative: true, onClick: () => 
+                this.setState({ 
+                  dataEdited: false,
+                  contributionData: undefined, 
+                  contributionDataError: undefined,
+                  showDataModal: false,
+                  showConfirmCloseEditedDataModal: false,
+                  confirmChangeTabsDataLevel: undefined
+                })
+              },
+              'Continue Editing'
+            ]}
+          />
+          <Modal size="small"
+            onClose={() => this.setState({ showConfirmChangeTabsEditedDataModal: false, confirmChangeTabsDataLevel: undefined })}
+            open={this.state.showConfirmChangeTabsEditedDataModal}
+            content="Changing table tabs will cancel edits made to this table."
+            actions={[
+              { content: 'Cancel Edits and Change Tabs', key: 'cancel', negative: true, onClick: () => 
+                this.setState({ 
+                  dataEdited: false,
+                  contributionData: undefined, 
+                  contributionDataError: undefined,
+                  showConfirmChangeTabsEditedDataModal: false,
+                  confirmChangeTabsDataLevel: undefined,
+                  dataLevel: this.state.confirmChangeTabsDataLevel
+                })
+              },
+              'Continue Editing'
+            ]}
+          />
+        </Modal.Content>
+        { isPrivate && 
+          <Modal.Actions>
+            <Button color='purple' floated="left" disabled={!this.state.dataEdited || this.state.dataSaving} onClick={() => {
+              const data = this.refs['hotTableComponent'] && this.refs['hotTableComponent'].hotInstance.getData() || undefined;
+              if (this.state.dataEdited && data) {
+                const rowData = this.state.contributionData[this.state.dataLevel];
+                const model = models[_.last(versions)];
+                const table = model.tables[this.state.dataLevel];
+                const modelColumns = _.sortBy(
+                  _.keys(table.columns), columnName => table.columns[columnName].position
+                );
+                const tableData = this.state.contributionData[this.state.dataLevel];
+                const usedColumns = {};
+                tableData.forEach(row => { _.keys(row).forEach(column => { usedColumns[column] = true; })});
+                const columns = modelColumns.filter(x => usedColumns[x]);
+                const contributionData = { ...this.state.contributionData,
+                  [this.state.dataLevel]: data.map(row => {
+                    const editedRow = {};
+                    row.forEach((col, colIdx) => {
+                      editedRow[columns[colIdx]] = col
+                    });
+                    return editedRow;
+                  })
+                };
+                console.log('updating contribution', item);
+                const contributor = item.summary.contribution.contributor;
+                const _contributor = item.summary.contribution._contributor;
+                const id = item.summary.contribution.id;
+                const contribution = contributionData;
+                const summary = item.summary;
+                Meteor.call('esUpdatePrivateContribution', {
+                  index, contributor, _contributor, id, contribution, summary
+                }, (error) => {
+                  console.log('updated contribution', id, error);
+                  if (error) { this.setState({contributionDataError: error, dataSaving: false});
+                  } else { 
+                    this.setState({dataSaving: false});
+                    Meteor.call('esUpdatePrivatePreSummaries', {
+                      index, contributor, _contributor, id, contribution, summary
+                    }, (error) => {
+                      console.log('updated contribution pre-summaries', id, error);
+                      if (error) { this.setState({contributionDataError: error});
+                      } else {
+                        Meteor.call('esUpdatePrivateSummaries', {
+                          index, contributor, _contributor, id, contribution, summary
+                        });
+                      }
+                    });
+                  }
+                });
+                this.setState({
+                  dataEdited: false,
+                  dataSaving: true,
+                  contributionData
+                });
+                this.contributionDataEdited = undefined;
+              }
+            }}>
+              {this.state.dataSaving ? 'Saving' : 'Save'} Edits
+            </Button>
+            <Button color='red' disabled={!this.state.dataEdited || this.state.dataSaving} onClick={() => {
+              this.contributionDataEdited = undefined;
+              this.setState({ 
+                dataEdited: false,
+                contributionData: undefined, 
+                contributionDataError: undefined
+              });
+            }}>
+              Cancel Edits
+            </Button>
+            <Button onClick={() => 
+              this.setState(this.state.dataEdited ? { showConfirmCloseEditedDataModal: true } : { showDataModal: false })
+            }>
+              Close
+            </Button>
+          </Modal.Actions>
+        }
+      </Modal>
     );
   }
 
-  renderData() {
-    let columns = `site\tlocation\tresult_type\tmethod_codes\tcitations\tgeologic_classes\tgeologic_types\tlithologies\tlat\tlon\tage\tage_sigma\tage_unit\tdir_tilt_correction\tdir_dec\tdir_inc\tdir_alpha95\tdir_k\tdir_n_specimens\tdir_polarity\tdir_nrm_origin\tvgp_lat\tvgp_lon\tvdm\tvdm_n_samples\tvadm\tvadm_n_samples\tint_abs\tint_abs_sigma\tdescription\tsoftware_packages`;
-    let data = `01a\tHawaii\t\t\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t
-01b\tHawaii\t\t\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t
-01c\tHawaii\t\t\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t
-2\tHawaii\t\t\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t
-01c\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t
-2\tHawaii\ti\t:DE-BFL:\t:This study:\t\t\t\t19.552\t204.70\t440\t240\tYears BP\t100\t7.60\t36.6\t1.1\t1662\t12\tn\tp\t82.9\t287.40\t1.06E+23\t4\t1.07E+23\t4\t4.79E-05\t6.00E-07\t2\t:PINT03:
-3\tHawaii\ti\t:DE-BFL:\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t19.296\t204.69\t700\t210\tYears BP\t100\t2.80\t41.4\t1.2\t905\t18\tn\tp\t84.8\t234.30\t9.42E+22\t2\t9.97E+22\t2\t4.45E-05\t1.20E-06\t3\t:PINT03:
-4\tHawaii\ti\t:DE-BFL:\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t19.494\t204.66\t760\t210\tYears BP\t100\t353.00\t25.8\t1.6\t849\t11\tn\tp\t81.1\t74.50\t1.05E+23\t2\t9.86E+22\t2\t4.41E-05\t8.00E-07\t4\t:PINT03:
-5\tHawaii\ti\t:DE-BFL:\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t19.564\t204.66\t1320\t150\tYears BP\t100\t2.20\t18.2\t2.2\t400\t12\tn\tp\t79.6\t12.80\t1.03E+23\t4\t9.27E+22\t4\t4.15E-05\t3.60E-06\t5\t:PINT03:
-6\tHawaii\ti\t:DE-BFL:\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t19.533\t204.65\t1690\t210\tYears BP\t100\t355.50\t17.8\t1.9\t679\t10\tn\tp\t78.7\t48.00\t9.71E+22\t4\t8.71E+22\t4\t3.90E-05\t3.10E-06\t6\t:PINT03:
-7\tHawaii\ti\t:DE-BFL:\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t19.118\t204.43\t2180\t180\tYears BP\t100\t11.20\t14.7\t2.1\t439\t12\tn\tp\t74.1\t340.00\t1.21E+23\t4\t1.08E+23\t4\t4.81E-05\t1.23E-05\t7\t:PINT03:
-8\tHawaii\ti\t:DE-BFL:\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t19.455\t204.71\t2190\t210\tYears BP\t100\t11.30\t15.2\t1.3\t1095\t12\tn\tp\t74\t340.00\t1.21E+23\t4\t1.08E+23\t4\t4.81E-05\t1.23E-05\t8\t:PINT03:
-9\tHawaii\ti\t:DE-BFL:\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t19.538\t204.66\t2550\t240\tYears BP\t100\t1.20\t21\t1.5\t987\t12\tn\tp\t81.3\t16.90\t1.07E+23\t4\t9.74E+22\t4\t4.36E-05\t2.30E-06\t9\t:PINT03:
-10\tHawaii\ti\t:DE-BFL:\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t19.64\t204.96\t2890\t210\tYears BP\t100\t357.70\t25.7\t2.3\t370\t11\tn\tp\t83.5\t44.90\t1.24E+23\t5\t1.15E+23\t5\t5.17E-05\t1.16E-05\t10\t:PINT03:
-11\tHawaii\ti\t:DE-BFL:\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t19.302\t204.69\t3480\t240\tYears BP\t100\t3.70\t36.4\t1.4\t1091\t12\tn\tp\t86.4\t279.50\t1.06E+23\t2\t1.07E+23\t2\t4.79E-05\t1.03E-05\t11\t:PINT03:
-12\tHawaii\ti\t:DE-BFL:\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t19.713\t204.88\t4050\t150\tYears BP\t100\t4.50\t33.4\t1.1\t1467\t11\tn\tp\t85.5\t313.10\t1.15E+23\t3\t1.13E+23\t3\t5.06E-05\t1.70E-06\t12\t:PINT03:
-13\tHawaii\ti\t:DE-BFL:\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t19.161\t204.46\t5160\t300\tYears BP\t100\t4.70\t27.6\t2\t493\t12\tn\tp\t83.6\t339.20\t8.54E+22\t5\t8.10E+22\t5\t3.61E-05\t2.60E-06\t13\t:PINT03:
-14\tHawaii\ti\t:DE-BFL:\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t19.543\t204.88\t5650\t270\tYears BP\t100\t5.40\t33.7\t1.4\t958\t12\tn\tp\t84.8\t305.80\t7.67E+22\t3\t7.57E+22\t3\t3.39E-05\t2.50E-06\t14\t:PINT03:
-15\tHawaii\ti\t:DE-BFL:\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t19.086\t204.41\t6160\t330\tYears BP\t100\t357.80\t54.9\t1.7\t819\t12\tn\tp\t73.5\t198.10\t6.41E+22\t2\t7.91E+22\t2\t3.52E-05\t3.50E-06\t15\t:PINT03:
-16\tHawaii\ti\t:DE-BFL:\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t19.072\t204.44\t7300\t300\tYears BP\t100\t2.30\t25.4\t1.4\t914\t10\tn\tp\t83.9\t3.00\t6.47E+22\t4\t6.02E+22\t4\t2.70E-05\t2.10E-06\t16\t:PINT03:
-17\tHawaii\ti\t:DE-BFL:\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t19.145\t204.48\t7950\t330\tYears BP\t100\t359.50\t33.4\t1.5\t917\t12\tn\tp\t89\t53.10\t6.97E+22\t3\t6.89E+22\t3\t3.07E-05\t1.10E-06\t17\t:PINT03:
-18\tHawaii\ti\t:DE-BFL:\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t19.42\t204.66\t8740\t300\tYears BP\t100\t357.30\t36\t2.3\t413\t11\tn\tp\t87.4\t127.20\t9.91E+22\t5\t9.98E+22\t5\t4.46E-05\t6.90E-06\t18\t:PINT03:
-19\tHawaii\ti\t:DE-BFL:\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t19.418\t204.66\t9500\t420\tYears BP\t100\t3.00\t33.7\t2.3\t351\t11\tn\tp\t87\t313.60\t9.30E+22\t5\t9.19E+22\t5\t4.11E-05\t4.90E-06\t19\t:PINT03:
-20\tHawaii\ti\t:DE-BFL:\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t19.101\t204.44\t10290\t450\tYears BP\t100\t3.60\t31.9\t1.8\t570\t12\tn\tp\t86.1\t322.00\t8.26E+22\t5\t8.08E+22\t5\t3.60E-05\t8.40E-06\t20\t:PINT03:
-21\tHawaii\ti\t:DE-BFL:\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t18.972\t204.38\t11780\t300\tYears BP\t100\t2.10\t8.7\t1.7\t738\t12\tn\tp\t75.2\t16.20\t8.55E+22\t3\t7.51E+22\t3\t3.34E-05\t5.00E-06\t21\t:PINT03:
-22\tHawaii\t\t\t:This study:\t:" Extrusive:Igneous ":\t:Lava Flow:\t:Not Specified:\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t
-01a\tHawaii\ti\t:DE-BFL:\t:This study:\t\t\t\t19.545\t204.91\t260\t210\tYears BP\t100\t5.50\t41.3\t1.7\t630\t12\tn\tp\t83.4\t254.60\t1.11E+23\t4\t1.17E+23\t4\t5.26E-05\t5.30E-06\t01a\t:PINT03:
-01b\tHawaii\ti\t:DE-BFL:\t:This study:\t\t\t\t19.58\t204.94\t260\t210\tYears BP\t100\t3.20\t44.2\t1.4\t906\t12\tn\tp\t83\t229.20\t1.11E+23\t4\t1.17E+23\t4\t5.26E-05\t5.30E-06\t01b\t:PINT03:
-01c\tHawaii\ti\t:DE-BFL:\t:This study:\t\t\t\t19.572\t204.94\t260\t210\tYears BP\t100\t3.10\t46\t2.1\t418\t12\tn\tp\t81.7\t224.10\t1.11E+23\t4\t1.17E+23\t4\t5.26E-05\t5.30E-06\t01c\t:PINT03:
-22\tHawaii\ti\t:DE-BFL:\t:This study:\t\t\t\t19.072\t204.44\t13210\t570\tYears BP\t100\t357.50\t54.6\t1.4\t916\t11\tn\tp\t73.8\t197.20\t6.93E+22\t4\t8.51E+22\t4\t3.79E-05\t3.40E-06\t22\t:PINT03:`;
+  renderData(item) {
+    const isPrivate = item.summary && item.summary.contribution && item.summary.contribution._is_activated !== 'true';
+    if (!this.state.contributionData && item && item.summary && item.summary.contribution)
+      Meteor.call('esGetContribution', {index, id: item.summary.contribution.id, tables: ['sites', 'samples', 'specimens', 'experiments', 'measurements']}, (error, c) => {
+        console.log('esGetContribution', error, c);
+        if (!error && c)
+          this.setState({ contributionData: c });
+        else
+          this.setState({ contributionData: {}, contributionDataError: error });
+      });
+    if (!this.state.contributionData)
+      return (
+        <div className="ui bottom attached segment" style={{overflow:'auto', height:`calc(100vh - ${isPrivate ? 19 : 14}em)`}}>
+          <div className="ui inverted active dimmer">
+            <div className="ui text loader">Loading Contribution Data</div>
+          </div>
+        </div>
+      );
+    if (this.state.dataLoading) {
+      _.delay(() => this.setState({ dataLoading: false }));
+      return (
+        <div className="ui bottom attached segment" style={{overflow:'auto', height:`calc(100vh - ${isPrivate ? 19 : 14}em)`}}>
+          <div className="ui inverted active dimmer">
+          <div className="ui text loader">Loading Contribution Data</div>
+        </div>
+        </div>
+      );
+    }
+    if (this.state.contributionDataError)
+      return (
+        <div className="ui bottom attached segment" style={{overflow:'auto', height:`calc(100vh - ${isPrivate ? 19 : 14}em)`}}>
+          <div className="ui error message">
+            <div className="header">Contribution Data Error</div>
+            <p>{this.state.contributionDataError}</p>
+          </div>
+        </div>
+    );
+    if (!this.state.contributionData[this.state.dataLevel])
+      return (
+        <div className="ui bottom attached segment" style={{overflow:'auto', height:`calc(100vh - ${isPrivate ? 19 : 14}em)`}}>
+          <div className="ui fluid warning message">
+            <div className="ui center aligned huge basic segment">No Rows to Display</div>
+          </div>
+        </div>
+      );
+    const model = models[_.last(versions)];
+    const table = model.tables[this.state.dataLevel];
+    const modelColumns = _.sortBy(
+      _.keys(table.columns), columnName => table.columns[columnName].position
+    );
+    const rowData = this.state.contributionData[this.state.dataLevel];
+    const usedColumns = {};
+    rowData.forEach(row => { _.keys(row).forEach(column => { usedColumns[column] = true; })});
+    const columns = modelColumns.filter(x => usedColumns[x]);
     return (
-      <table className="ui compact celled striped definition single line table">
-        <thead>
-        <tr ref="table column headers">
-          <th></th>
-          {columns.split('\t').map((columnName, i) => {
-            return (
-              <th key={i}>
-                {columnName}
-              </th>
-            );
-          })}
-        </tr>
-        </thead>
-        <tbody>
-        {data.split('\n').map((row, i) => {
-          return (
-            <tr key={i} className={i == 3 || i == 6 || i == 10 ? 'active' : ''}>
-              <td className="collapsing right aligned">
-                {i + 1}
-              </td>
-              {(row.split('\t').map((col, j) => {
-                return (
-                  <td key={j}>{col}</td>
-                );
-              }))}
-            </tr>
-          );
-        })}
-        </tbody>
-      </table>
+      <HotTable
+        ref="hotTableComponent"
+        className={!isPrivate ? 'handsontable-readonly' : ''}
+        style={{marginTop: -1, height:`calc(100vh - ${isPrivate ? 20 : 15}em)`, overflow: 'hidden', backgroundColor: '#EEE' }}
+        settings={{
+          licenseKey: "non-commercial-and-evaluation",
+          data: rowData,
+          readOnly: !isPrivate,
+          contextMenu: isPrivate,
+          rowHeaders: true,
+          colHeaders: columns,    
+          outsideClickDeselects: false,
+          afterChange: (changes) => {
+            if (changes) {
+              const data = this.refs['hotTableComponent'] && this.refs['hotTableComponent'].hotInstance.getData() || undefined;
+              if (data && !this.state.dataEdited) this.setState({ dataEdited: true });
+              this.contributionDataEdited = data;
+            }
+          }
+        }}
+      >
+        {columns.map((columnName, i) => 
+          <HotColumn key={i} data={columnName}></HotColumn>
+        )}
+      </HotTable>
     );
   }
 
 }
 
 SearchSummariesListItem.propTypes = {
-  table: PropTypes.oneOf(['contribution', 'kds']).isRequired,
+  table: PropTypes.oneOf(['contribution', 'sites', 'samples', 'specimens', 'experiments', 'measurements']).isRequired,
   item:  PropTypes.object
 };
-
 
 export default SearchSummariesListItem;
