@@ -882,7 +882,7 @@ class SearchSummariesListItem extends React.Component {
                   { dataLoading: true, dataLevel: 'measurements', confirmChangeTabsDataLevel: 'measurements' }
                   )}
               >
-                Mpecimens
+                Measurments
                 <div className="ui circular small basic label" style={{color: '#0C0C0C', margin: '-1em -1em -1em 0.5em', minWidth: '4em'}}>
                   <Count count={ this.state.contributionData.measurements.length }/>
                 </div>
