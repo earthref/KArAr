@@ -195,7 +195,7 @@ export default class extends React.Component {
             Any values in this column shoud either contain valid DOI that is resolvable by 
             doi.org or a valid URL that resolves to a web page. If you have
             a dataset associated with a paper that does not have a DOI (PhD thesis,
-            master thesis, USGS report, etc.), MagIC can store the paper in the KArAr
+            master thesis, USGS report, etc.), KArAr can store the paper in the ERDA
             database (barring copyright issues) and mint a DOI for it.
         </span>
       );
