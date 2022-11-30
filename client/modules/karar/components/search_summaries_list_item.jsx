@@ -138,8 +138,8 @@ class SearchSummariesListItem extends React.Component {
         <span>
           <b>{_is_activated ? 'KArAr Contribution Link:' : 'Future Contribution Link:'}</b>
           <p>{_is_activated ?
-            <a style={this.styles.a} href={'https://earthref.org/KArAr/' + id} target="_blank">{'earthref.org/KArAr/' + id}</a> :
-            <span>{'earthref.org/KArAr/' + id}</span>
+            <a style={this.styles.a} href={'https://karar.earthref.org/KArAr/' + id} target="_blank">{'karar.earthref.org/KArAr/' + id}</a> :
+            <span>{'karar.earthref.org/KArAr/' + id}</span>
           }</p>
         </span>}
         {id &&
@@ -589,7 +589,7 @@ class SearchSummariesListItem extends React.Component {
                       <td>
                         {(_is_activated || i > 0) &&
                         <a style={this.styles.a}
-                          href={'https://earthref.org/KArAr/' + v.id}>{'earthref.org/KArAr/' + v.id}</a>}
+                          href={'https://karar.earthref.org/KArAr/' + v.id}>{'earthref.org/KArAr/' + v.id}</a>}
                         {(!_is_activated && i == 0) &&
                         <span>{'earthref.org/MagIC/' + v.id}</span>}
                       </td>
