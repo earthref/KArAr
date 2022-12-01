@@ -589,7 +589,7 @@ class SearchSummariesListItem extends React.Component {
                       <td>
                         {(_is_activated || i > 0) &&
                         <a style={this.styles.a}
-                          href={'https://karar.earthref.org/KArAr/' + v.id}>{'earthref.org/KArAr/' + v.id}</a>}
+                          href={'https://karar.earthref.org/KArAr/' + v.id}>{'karar.earthref.org/KArAr/' + v.id}</a>}
                         {(!_is_activated && i == 0) &&
                         <span>{'earthref.org/MagIC/' + v.id}</span>}
                       </td>
