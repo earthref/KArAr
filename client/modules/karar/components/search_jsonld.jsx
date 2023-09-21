@@ -29,16 +29,16 @@ export default class extends React.Component {
           "geosci-time": "http://schema.geoschemas.org/contexts/temporal#"
         },
         "@type": "Dataset",
-        "@id": "http://dx.doi.org/10.7288/V4/MAGIC/" + (this.props.id || contribution.id),
-        "url": "https://earthref.org/MagIC/" + (this.props.id || contribution.id),
-        "identifier": "http://dx.doi.org/10.7288/V4/MAGIC/" + (this.props.id || contribution.id),
+        "@id": "http://dx.doi.org/10.7288/V4/KArAr/" + (this.props.id || contribution.id),
+        "url": "https://earthref.org/KArAr/" + (this.props.id || contribution.id),
+        "identifier": "http://dx.doi.org/10.7288/V4/KArAr/" + (this.props.id || contribution.id),
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "sdPublisher": "EarthRef.org",
         "sdLicense": "https://creativecommons.org/licenses/by/4.0/",
         "sdDatePublished": now.toISOString(),
         "distribution":{
           "@type":"DataDownoad",
-          "contentUrl": "https://earthref.org/MagIC/download/" + (this.props.id || contribution.id) + "/magic_contribution_" + (this.props.id || contribution.id) + "15032.txt",
+          "contentUrl": "https://earthref.org/KArAr/download/" + (this.props.id || contribution.id) + "/magic_contribution_" + (this.props.id || contribution.id) + "15032.txt",
           "encodingFormat": ["text/plain; application=magic-tsv", "MagIC-tsv-Multipart"] }
       };
 
@@ -53,7 +53,7 @@ export default class extends React.Component {
   
       if (contribution._reference) {
         if (contribution._reference.doi) json.citation = "https://dx.doi.org/" + contribution._reference.doi;
-        if (contribution._reference.doi) json.sameAs = ["https://earthref.org/MagIC/" + contribution._reference.doi];
+        if (contribution._reference.doi) json.sameAs = ["https://earthref.org/KArAr/" + contribution._reference.doi];
         if (contribution._reference.html || contribution._reference.title) json.name = (contribution._reference.html || contribution._reference.title) + ' (Dataset)';
         if (contribution._reference.html || contribution._reference.title) json.description = "Paleomagnetic, rock magnetic, or geomagnetic data found in the MagIC data repository from a paper titled: " + (contribution._reference.html || contribution._reference.title);
         if (contribution._reference.keywords) json.keywords = contribution._reference.keywords;
@@ -182,7 +182,7 @@ export default class extends React.Component {
 
       return (
         <Helmet>
-          <link rel="canonical" href={"https://earthref.org/MagIC/" + (this.props.id || contribution.id)} />
+          <link rel="canonical" href={"https://earthref.org/KArAr/" + (this.props.id || contribution.id)} />
           <script id="schemaorg" type="application/ld+json">{JSON.stringify(json, null, '  ')}</script>
         </Helmet>
       );

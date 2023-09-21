@@ -84,6 +84,31 @@ export default class extends React.Component {
       borders[borders.length + group.colSpan - 1] = true;
       return borders;
     }, []);
+    // return (<HotTable
+    //     ref="hotTableComponent"
+    //     className={!isPrivate ? 'handsontable-readonly' : ''}
+    //     style={{ marginTop: -1, height: `calc(100vh - ${isPrivate ? 20 : 15}em)`, overflow: 'hidden', backgroundColor: '#EEE' }}
+    //     settings={{
+    //         licenseKey: "non-commercial-and-evaluation",
+    //         data: rowData,
+    //         readOnly: !isPrivate,
+    //         contextMenu: isPrivate,
+    //         rowHeaders: true,
+    //         colHeaders: columns,
+    //         outsideClickDeselects: false,
+    //         afterChange: (changes) => {
+    //             if (changes) {
+    //                 const data = this.refs['hotTableComponent'] && this.refs['hotTableComponent'].hotInstance.getData() || undefined;
+    //                 if (data && !this.state.dataEdited) this.setState({ dataEdited: true });
+    //                 this.contributionDataEdited = data;
+    //             }
+    //         }
+    //     }}
+    // >
+    //     {columns.map((columnName, i) =>
+    //         <HotColumn key={i} data={columnName}></HotColumn>
+    //     )}
+    // </HotTable>);
     return (
       <div ref="scroller" style={_.extend({}, this.styles.scroller, this.props.style)} onScroll={this.onScroll}>
         <table ref="content" className="ui very compact celled small table"
@@ -141,5 +166,87 @@ export default class extends React.Component {
     );
   }
 
-}
+  renderData(item) {
+    const isPrivate = item.summary && item.summary.contribution && item.summary.contribution._is_activated !== 'true';
+    if (!this.state.contributionData && item && item.summary && item.summary.contribution)
+      Meteor.call('esGetContribution', {index, id: item.summary.contribution.id, tables: ['sites', 'samples', 'specimens', 'experiments', 'measurements']}, (error, c) => {
+        console.log('esGetContribution', error, c);
+        if (!error && c)
+          this.setState({ contributionData: c });
+        else
+          this.setState({ contributionData: {}, contributionDataError: error });
+      });
+    if (!this.state.contributionData)
+      return (
+        <div className="ui bottom attached segment" style={{overflow:'auto', height:`calc(100vh - ${isPrivate ? 19 : 14}em)`}}>
+          <div className="ui inverted active dimmer">
+            <div className="ui text loader">Loading Contribution Data</div>
+          </div>
+        </div>
+      );
+    if (this.state.dataLoading) {
+      _.delay(() => this.setState({ dataLoading: false }));
+      return (
+        <div className="ui bottom attached segment" style={{overflow:'auto', height:`calc(100vh - ${isPrivate ? 19 : 14}em)`}}>
+          <div className="ui inverted active dimmer">
+          <div className="ui text loader">Loading Contribution Data</div>
+        </div>
+        </div>
+      );
+    }
+    if (this.state.contributionDataError)
+      return (
+        <div className="ui bottom attached segment" style={{overflow:'auto', height:`calc(100vh - ${isPrivate ? 19 : 14}em)`}}>
+          <div className="ui error message">
+            <div className="header">Contribution Data Error</div>
+            <p>{this.state.contributionDataError}</p>
+          </div>
+        </div>
+    );
+    if (!this.state.contributionData[this.state.dataLevel])
+      return (
+        <div className="ui bottom attached segment" style={{overflow:'auto', height:`calc(100vh - ${isPrivate ? 19 : 14}em)`}}>
+          <div className="ui fluid warning message">
+            <div className="ui center aligned huge basic segment">No Rows to Display</div>
+          </div>
+        </div>
+      );
+    const model = models[_.last(versions)];
+    const table = model.tables[this.state.dataLevel];
+    const modelColumns = _.sortBy(
+      _.keys(table.columns), columnName => table.columns[columnName].position
+    );
+    const rowData = this.state.contributionData[this.state.dataLevel];
+    const usedColumns = {};
+    rowData.forEach(row => { _.keys(row).forEach(column => { usedColumns[column] = true; })});
+    const columns = modelColumns.filter(x => usedColumns[x]);
+    return (
+      <HotTable
+        ref="hotTableComponent"
+        className={!isPrivate ? 'handsontable-readonly' : ''}
+        style={{marginTop: -1, height:`calc(100vh - ${isPrivate ? 20 : 15}em)`, overflow: 'hidden', backgroundColor: '#EEE' }}
+        settings={{
+          licenseKey: "non-commercial-and-evaluation",
+          data: rowData,
+          readOnly: !isPrivate,
+          contextMenu: isPrivate,
+          rowHeaders: true,
+          colHeaders: columns,    
+          outsideClickDeselects: false,
+          afterChange: (changes) => {
+            if (changes) {
+              const data = this.refs['hotTableComponent'] && this.refs['hotTableComponent'].hotInstance.getData() || undefined;
+              if (data && !this.state.dataEdited) this.setState({ dataEdited: true });
+              this.contributionDataEdited = data;
+            }
+          }
+        }}
+      >
+        {columns.map((columnName, i) => 
+          <HotColumn key={i} data={columnName}></HotColumn>
+        )}
+      </HotTable>
+    );
+  }
 
+}

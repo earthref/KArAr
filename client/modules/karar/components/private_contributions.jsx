@@ -113,7 +113,7 @@ export default class extends React.Component {
   }
 
   showShareLink(id, private_key) {
-    $(this.refs["share link"]).val(`https://earthref.org/MagIC/${id}/${private_key}`);
+    $(this.refs["share link"]).val(`https://earthref.org/KArAr/${id}/${private_key}`);
     $(this.refs["share"]).modal("show");
   }
 

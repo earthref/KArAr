@@ -563,16 +563,8 @@ class SearchSummariesListItem extends React.Component {
                   return (
                     <tr key={i}>
                       <td style={{whiteSpace: 'nowrap'}}>
-                        {v.id && v.id < 16282 &&
-                        <form action="//earthref.org/cgi-bin/z-download.cgi" method="post">
-                          <input type="hidden" name="file_path" value={`/projects/earthref/local/oracle/earthref/magic/meteor/activated/magic_contribution_${v.id}.txt`}/>
-                          <input type="hidden" name="file_name" value={`magic_contribution_${v.id}.txt`}/>
-                          <button type="submit" className={'ui basic tiny fluid icon compact blue button'} style={{marginTop:'0'}}>
-                            <i className="ui file text outline icon"/> Download
-                          </button>
-                        </form>}
-                        {v.id && v.id >= 16282 &&
-                        <a href={`//earthref.org/MagIC/download/${v.id}/magic_contribution_${v.id}.txt`} download>
+                        {v.id &&
+                        <a href={`//earthref.org/KArAr/download/${v.id}/karar_contribution_${v.id}.txt`} download>
                           <button
                             className="ui basic tiny fluid compact icon blue button"
                             style={{marginTop:'0'}}
@@ -591,7 +583,7 @@ class SearchSummariesListItem extends React.Component {
                         <a style={this.styles.a}
                           href={'https://karar.earthref.org/KArAr/' + v.id}>{'karar.earthref.org/KArAr/' + v.id}</a>}
                         {(!_is_activated && i == 0) &&
-                        <span>{'earthref.org/MagIC/' + v.id}</span>}
+                        <span>{'earthref.org/KArAr/' + v.id}</span>}
                       </td>
                       <td>
                         {_is_activated && _has_data_doi &&
@@ -708,7 +700,7 @@ class SearchSummariesListItem extends React.Component {
                         </button>
                       </td>
                       <td>
-                        Upload the contribution text file to magic-contributions and/or magic-activated-contributions.
+                        Upload the contribution text file to karar-contributions and/or karar-activated-contributions.
                       </td>
                     </tr>
                   )}

@@ -1,20 +1,20 @@
 import _ from 'lodash';
 import { Meteor } from 'meteor/meteor';
-import elasticsearch from "elasticsearch";
+import opensearch from "@opensearch-project/opensearch";
 import BPromise from 'bluebird';
 import request from 'request';
 
-const esClient = new elasticsearch.Client({
+const esClient = new opensearch.Client({
   //log: "trace",
-  host: "http://128.193.70.68:9200",
+  node: Meteor.settings.opensearch && Meteor.settings.opensearch.node || "",
   keepAlive: false,
   apiVersion: '6.8',
   requestTimeout: 60 * 60 * 1000 // 1 hour
 });
 
-let index = "karar_v1";
+let index = "karar";
 
-  describe("magic.data_doi", () => {
+  describe("karar.data_doi", () => {
 
     it("should update data dois", function (done) { setTimeout(() => {
       this.timeout(0);
@@ -52,10 +52,10 @@ let index = "karar_v1";
           }}
         }
       }).then((resp) => {
-        console.log('Contributions without a data DOI:', resp.hits.total);
-        if (resp.hits.total > 0) {
+        console.log('Contributions without a data DOI:', resp.body.hits.total);
+        if (resp.body.hits.total.value > 0) {
 
-          BPromise.each(resp.hits.hits, hit => {
+          BPromise.each(resp.body.hits.hits, hit => {
             return new Promise((resolve) => {
 
               let related = hit._source.summary.contribution._reference.doi &&
@@ -70,8 +70,8 @@ let index = "karar_v1";
                 hit._source.summary._all.geologic_classes.forEach(geologic_class => {
                   subjects.push(
                     `<subject 
-                      subjectScheme="earthref.magic.geologic_classes"
-                      schemeURI="https://earthref.org/MagIC/data-models/3.0?q=geologic_classes"
+                      subjectScheme="earthref.karar.geologic_classes"
+                      schemeURI="https://earthref.org/KArAr/data-models/1,0?q=geologic_classes"
                       valueURI="https://earthref.org/vocabularies/controlled?q=${geologic_class}"
                     >${geologic_class}</subject>`
                   );
@@ -80,8 +80,8 @@ let index = "karar_v1";
                 hit._source.summary._all.geologic_types.forEach(geologic_type => {
                   subjects.push(
                     `<subject
-                      subjectScheme="earthref.magic.geologic_types"
-                      schemeURI="https://earthref.org/MagIC/data-models/3.0?q=geologic_types"
+                      subjectScheme="earthref.karar.geologic_types"
+                      schemeURI="https://earthref.org/KArAr/data-models/1,0?q=geologic_types"
                       valueURI="https://earthref.org/vocabularies/controlled?q=${geologic_type}"
                     >${geologic_type}</subject>`
                   );
@@ -90,8 +90,8 @@ let index = "karar_v1";
                 hit._source.summary._all.lithologies.forEach(lithology => {
                   subjects.push(
                     `<subject
-                      subjectScheme="earthref.magic.lithologies"
-                      schemeURI="https://earthref.org/MagIC/data-models/3.0?q=lithologies"
+                      subjectScheme="earthref.karar.lithologies"
+                      schemeURI="https://earthref.org/KArAr/data-models/1,0?q=lithologies"
                       valueURI="https://earthref.org/vocabularies/controlled?q=${lithology}"
                     >${lithology}</subject>`
                   );
@@ -101,8 +101,8 @@ let index = "karar_v1";
               hit._source.summary._all._age_range_ybp.range.gte !== undefined && 
               subjects.push(
                 `<subject
-                  schemeURI="https://earthref.org/MagIC/data-models/3.0?q=age_low"
-                  subjectScheme="earthref.magic.age_low"
+                  schemeURI="https://earthref.org/KArAr/data-models/1,0?q=age_low"
+                  subjectScheme="earthref.karar.age_low"
                 >${hit._source.summary._all._age_range_ybp.range.gte}</subject>`
               );
               hit._source.summary._all && hit._source.summary._all._age_range_ybp && 
@@ -110,8 +110,8 @@ let index = "karar_v1";
               hit._source.summary._all._age_range_ybp.range.lte !== undefined && 
               subjects.push(
                 `<subject
-                  schemeURI="https://earthref.org/MagIC/data-models/3.0?q=age_high"
-                  subjectScheme="earthref.magic.age_high"
+                  schemeURI="https://earthref.org/KArAr/data-models/1,0?q=age_high"
+                  subjectScheme="earthref.karar.age_high"
                 >${hit._source.summary._all._age_range_ybp.range.lte}</subject>`
               );
               hit._source.summary._all && hit._source.summary._all._age_range_ybp && 
@@ -121,8 +121,8 @@ let index = "karar_v1";
               ) && 
               subjects.push(
                 `<subject 
-                  subjectScheme="earthref.magic.age_unit"
-                  schemeURI="https://earthref.org/MagIC/data-models/3.0?q=age_unit"
+                  subjectScheme="earthref.karar.age_unit"
+                  schemeURI="https://earthref.org/KArAr/data-models/1,0?q=age_unit"
                   valueURI="https://earthref.org/vocabularies/controlled?q=Years BP"
                 >Years BP</subject>`
               );              
@@ -199,20 +199,20 @@ let index = "karar_v1";
                   xmlns="http://datacite.org/schema/kernel-4"
                   xsi:schemaLocation="http://datacite.org/schema/kernel-4 http://schema.datacite.org/meta/kernel-4.3/metadata.xsd"
                 >
-                  <identifier identifierType="DOI">10.7288/V4/MAGIC/${hit._source.summary.contribution.id}</identifier>
+                  <identifier identifierType="DOI">10.7288/V4/KArAr/${hit._source.summary.contribution.id}</identifier>
                   ${creators}
                   <titles>
                     <title>${hit._source.summary.contribution._reference.title} (Dataset)</title>
                   </titles>
                   <contributors>
                     <contributor contributorType="Distributor">
-                      <contributorName>Magnetics Information Consortium (MagIC)</contributorName>
+                      <contributorName>Magnetics Information Consortium (karar)</contributorName>
                     </contributor>
                     ${labNames || ''}
                     ${hit._source.summary.contribution.id == 16834 ? '<contributor contributorType="ContactPerson"><contributorName>Joseph M Grappone (jmgrappone@gmail.com)</contributorName></contributor>' : ''}
                   </contributors>
                   <publisher>${hit._source.summary.contribution._reference.journal || 
-                    'Magnetics Information Consortium (MagIC)'}</publisher>
+                    'Magnetics Information Consortium (karar)'}</publisher>
                   <publicationYear>${hit._source.summary.contribution._reference.year}</publicationYear>
                   <version>${hit._source.summary.contribution.version}</version>
                   <dates>
@@ -231,13 +231,13 @@ let index = "karar_v1";
               let payload =
                 `_profile: datacite\n` +
                 `_status: public\n` +
-                `_target: https://earthref.org/MagIC/${hit._source.summary.contribution.id}\n` +
+                `_target: https://earthref.org/KArAr/${hit._source.summary.contribution.id}\n` +
                 `datacite: ${datacite}`;
 
               //console.log('datacite', datacite);
               request({
                 method: 'PUT',
-                uri: 'https://ezid.cdlib.org/id/doi:10.7288/V4/MAGIC/' + hit._source.summary.contribution.id + '?update_if_exists=yes',
+                uri: 'https://ezid.cdlib.org/id/doi:10.7288/V4/KArAr/' + hit._source.summary.contribution.id + '?update_if_exists=yes',
                 auth: Meteor.settings.ezid,
                 headers: {'content-type': 'text/plain; charset=UTF-8'},
                 body: payload
