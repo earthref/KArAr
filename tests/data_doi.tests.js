@@ -71,7 +71,7 @@ let index = "karar";
                   subjects.push(
                     `<subject 
                       subjectScheme="earthref.karar.geologic_classes"
-                      schemeURI="https://earthref.org/KArAr/data-models/1,0?q=geologic_classes"
+                      schemeURI="https://earthref.org/KArAr/data-models/1.0?q=geologic_classes"
                       valueURI="https://earthref.org/vocabularies/controlled?q=${geologic_class}"
                     >${geologic_class}</subject>`
                   );
@@ -81,7 +81,7 @@ let index = "karar";
                   subjects.push(
                     `<subject
                       subjectScheme="earthref.karar.geologic_types"
-                      schemeURI="https://earthref.org/KArAr/data-models/1,0?q=geologic_types"
+                      schemeURI="https://earthref.org/KArAr/data-models/1.0?q=geologic_types"
                       valueURI="https://earthref.org/vocabularies/controlled?q=${geologic_type}"
                     >${geologic_type}</subject>`
                   );
@@ -91,7 +91,7 @@ let index = "karar";
                   subjects.push(
                     `<subject
                       subjectScheme="earthref.karar.lithologies"
-                      schemeURI="https://earthref.org/KArAr/data-models/1,0?q=lithologies"
+                      schemeURI="https://earthref.org/KArAr/data-models/1.0?q=lithologies"
                       valueURI="https://earthref.org/vocabularies/controlled?q=${lithology}"
                     >${lithology}</subject>`
                   );
@@ -101,7 +101,7 @@ let index = "karar";
               hit._source.summary._all._age_range_ybp.range.gte !== undefined && 
               subjects.push(
                 `<subject
-                  schemeURI="https://earthref.org/KArAr/data-models/1,0?q=age_low"
+                  schemeURI="https://earthref.org/KArAr/data-models/1.0?q=age_low"
                   subjectScheme="earthref.karar.age_low"
                 >${hit._source.summary._all._age_range_ybp.range.gte}</subject>`
               );
@@ -110,7 +110,7 @@ let index = "karar";
               hit._source.summary._all._age_range_ybp.range.lte !== undefined && 
               subjects.push(
                 `<subject
-                  schemeURI="https://earthref.org/KArAr/data-models/1,0?q=age_high"
+                  schemeURI="https://earthref.org/KArAr/data-models/1.0?q=age_high"
                   subjectScheme="earthref.karar.age_high"
                 >${hit._source.summary._all._age_range_ybp.range.lte}</subject>`
               );
@@ -122,7 +122,7 @@ let index = "karar";
               subjects.push(
                 `<subject 
                   subjectScheme="earthref.karar.age_unit"
-                  schemeURI="https://earthref.org/KArAr/data-models/1,0?q=age_unit"
+                  schemeURI="https://earthref.org/KArAr/data-models/1.0?q=age_unit"
                   valueURI="https://earthref.org/vocabularies/controlled?q=Years BP"
                 >Years BP</subject>`
               );              
@@ -206,13 +206,13 @@ let index = "karar";
                   </titles>
                   <contributors>
                     <contributor contributorType="Distributor">
-                      <contributorName>Magnetics Information Consortium (karar)</contributorName>
+                      <contributorName>K/Ar and 40Ar/39Ar Data Repository (KArAr)</contributorName>
                     </contributor>
                     ${labNames || ''}
                     ${hit._source.summary.contribution.id == 16834 ? '<contributor contributorType="ContactPerson"><contributorName>Joseph M Grappone (jmgrappone@gmail.com)</contributorName></contributor>' : ''}
                   </contributors>
                   <publisher>${hit._source.summary.contribution._reference.journal || 
-                    'Magnetics Information Consortium (karar)'}</publisher>
+                    'K/Ar and 40Ar/39Ar Data Repository (KArAr)'}</publisher>
                   <publicationYear>${hit._source.summary.contribution._reference.year}</publicationYear>
                   <version>${hit._source.summary.contribution.version}</version>
                   <dates>
