@@ -223,7 +223,7 @@ export default function () {
           "type": '_doc',
           "body": search
         });
-        return resp;
+        return resp.body;
 
       } catch(error) {
         console.error("esScroll", index, type, queries, filters, source, sort, pageSize, error.message);
@@ -240,7 +240,7 @@ export default function () {
           "scrollId": scrollID,
           "scroll": '30s'
         });
-        return resp;
+        return resp.body;
 
       } catch(error) {
         console.error("esScrollByID", scrollID);

@@ -63,9 +63,6 @@ class SearchSummariesListItem extends React.Component {
     if (this.props.table === 'contribution' && item.summary && item.summary.contribution && item.summary.contribution._reference) {
       title = item.summary.contribution._reference.title;
     }
-    if (this.props.table === 'sites' && item.summary && item.summary._all) {
-      if (item.summary._all.site) title += ' ⇒ <b>' + item.summary._all.site[0] + '</b>';
-    }
     if (this.props.table === 'samples' && item.summary && item.summary._all) {
       if (item.summary._all.site) title += ' ⇒ ' + item.summary._all.site[0];
       if (item.summary._all.sample) title += ' ⇒ <b>' + item.summary._all.sample[0] + '</b>';
@@ -765,31 +762,6 @@ class SearchSummariesListItem extends React.Component {
         </Modal.Header>
         <Modal.Content>
           <div className="ui top attached tabular small menu search-tab-menu">
-            { this.state.contributionData && this.state.contributionData.sites ?
-              <a 
-                className={`${this.state.dataLevel === 'sites' ? 'active ' : ''}item`} 
-                style={this.state.dataLevel === 'sites' ? {backgroundColor: '#F0F0F0'} : {}}
-                onClick={() => this.setState(this.state.dataEdited ? 
-                  { showConfirmChangeTabsEditedDataModal: true, confirmChangeTabsDataLevel: 'sites' } : 
-                  { dataLoading: true, dataLevel: 'sites' }
-              )}
-              >
-                Sites
-                <div className="ui circular small basic label" style={{color: '#0C0C0C', margin: '-1em -1em -1em 0.5em', minWidth: '4em'}}>
-                  <Count count={ this.state.contributionData.sites.length }/>
-                </div>
-              </a>
-            :
-              <div 
-                className={`${this.state.dataLevel === 'sites' ? 'active ' : ''}disabled item`} 
-                style={this.state.dataLevel === 'sites' ? {backgroundColor: '#F0F0F0'} : {}}
-              >
-                Sites
-                <div className="ui circular small basic label" style={{color: '#0C0C0C', margin: '-1em -1em -1em 0.5em', minWidth: '4em'}}>
-                  { this.state.contributionData ? '0' : '?' }
-                </div>
-              </div>
-            }
             { this.state.contributionData && this.state.contributionData.samples ?
               <a 
                 className={`${this.state.dataLevel === 'samples' ? 'active ' : ''}item`} 
@@ -1013,7 +985,7 @@ class SearchSummariesListItem extends React.Component {
   renderData(item) {
     const isPrivate = item.summary && item.summary.contribution && item.summary.contribution._is_activated !== 'true';
     if (!this.state.contributionData && item && item.summary && item.summary.contribution)
-      Meteor.call('esGetContribution', {index, id: item.summary.contribution.id, tables: ['sites', 'samples', 'specimens', 'experiments', 'measurements']}, (error, c) => {
+      Meteor.call('esGetContribution', {index, id: item.summary.contribution.id, tables: ['samples', 'specimens', 'experiments', 'measurements']}, (error, c) => {
         console.log('esGetContribution', error, c);
         if (!error && c)
           this.setState({ contributionData: c });
@@ -1096,7 +1068,7 @@ class SearchSummariesListItem extends React.Component {
 }
 
 SearchSummariesListItem.propTypes = {
-  table: PropTypes.oneOf(['contribution', 'sites', 'samples', 'specimens', 'experiments', 'measurements']).isRequired,
+  table: PropTypes.oneOf(['contribution', 'samples', 'specimens', 'experiments', 'measurements']).isRequired,
   item:  PropTypes.object
 };
 

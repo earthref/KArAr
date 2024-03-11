@@ -35,13 +35,6 @@ export const composer = ({es, pageSize, pageNumber}, onData) => {
           let citation = s && s.contribution && s.contribution._reference && s.contribution._reference.citation || "Unknown";
           let version = s && s.contribution && s.contribution.version || "Unknown";
           let title = '<b>' + citation +' v. ' + version + '</b>';
-          //if (es.type === 'locations' && s._all) {
-          //  if (s._all.location) title += ' ⇒ <b>' + s._all.location[0] + '</b>';
-          //}
-          if (es.type === 'sites' && s._all) {
-            if (s._all.location) title += ' ⇒ ' + s._all.location[0];
-            //if (s._all.site) title += ' ⇒ <b>' + s._all.site[0] + '</b>';
-          }
           if (es.type === 'samples' && s._all) {
             if (s._all.location) title += ' ⇒ ' + s._all.location[0];
             if (s._all.site) title += ' ⇒ ' + s._all.site[0];
