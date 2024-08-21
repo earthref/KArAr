@@ -39,7 +39,7 @@ export default class extends React.Component {
         "distribution":{
           "@type":"DataDownoad",
           "contentUrl": "https://earthref.org/KArAr/download/" + (this.props.id || contribution.id) + "/magic_contribution_" + (this.props.id || contribution.id) + "15032.txt",
-          "encodingFormat": ["text/plain; application=magic-tsv", "MagIC-tsv-Multipart"] }
+          "encodingFormat": ["text/plain; application=magic-tsv", "EarthRef-tsv-Multipart"] }
       };
 
       if (this.props.id && contribution._history) {

@@ -223,7 +223,7 @@ class DataModel extends React.Component {
       moment(model.updated_day, 'YYYY:MM:DD').format('MMMM Do, YYYY') :
       'unpublished');
     const blob = new Blob([JSON.stringify(model, null, '\t')], {type: "text/plain;charset=utf-8"});
-    saveAs(blob, 'MagIC Data Model v' + version + ' - ' + updated + '.json');
+    saveAs(blob, 'KArAr Data Model v' + version + ' - ' + updated + '.json');
   }
 
   render() {
