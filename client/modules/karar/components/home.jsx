@@ -52,7 +52,7 @@ export default class extends React.Component {
             KArAr Resources
           </h2>
           <div className="ui two cards" style={{marginTop: 0}}>
-            <IconButton className="borderless card" link="/KArAr/data-models/1.1" portal="KArAr">
+            <IconButton className="borderless card" link="/KArAr/data-models" portal="KArAr">
               <i className="icons">
                 <i className="sitemap icon"/>
                 <i className="corner table icon"/>
