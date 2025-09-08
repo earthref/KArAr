@@ -1644,6 +1644,103 @@ export default function () {
         console.error("esUpdateUser", id, name, handle, passHash, error.message);
         throw new Meteor.Error("esUpdateUser", "Failed to update user data.");
       }  
+    },
+
+    async esGetMeasurementsForExperiment({index, experimentName}) {
+      console.log("esGetMeasurementsForExperiment", index, experimentName);
+      this.unblock();
+      try {
+        // Query using the searchable summary data structure
+        // Since contribution field is not indexed, we need to get the full contribution data
+        let resp = await esClient.search({
+          "index": index,
+          "type": "_doc",
+          "body": {
+            "_source": {
+              "includes": ["contribution", "summary._all.experiment"]
+            },
+            "query": {
+              "bool": {
+                "filter": [{
+                  "term": {
+                    "type": "contribution"
+                  }
+                }],
+                "should": [
+                  {
+                    "term": {
+                      "summary._all.experiment": experimentName
+                    }
+                  },
+                  {
+                    "match": {
+                      "summary._all.experiment": experimentName
+                    }
+                  }
+                ],
+                "minimum_should_match": 1
+              }
+            },
+            "size": 100
+          }
+        });
+        
+        console.log("esGetMeasurementsForExperiment search results:", resp.body.hits.total, "contributions found");
+        
+        // Extract measurements from all contributions
+        let allMeasurements = [];
+        let contributionFound = false;
+        
+        resp.body.hits.hits.forEach(hit => {
+          const contribution = hit._source.contribution;
+          if (contribution) {
+            contributionFound = true;
+            
+            // Check if measurements exist and match the experiment
+            if (contribution.measurements && Array.isArray(contribution.measurements)) {
+              contribution.measurements.forEach(measurement => {
+                if (measurement.experiment === experimentName || 
+                    measurement.experiment === String(experimentName) ||
+                    String(measurement.experiment) === String(experimentName)) {
+                  console.log("Found matching measurement:", measurement.experiment);
+                  allMeasurements.push(measurement);
+                }
+              });
+            }
+            
+            // Also log what experiments are available for debugging
+            if (contribution.experiments && Array.isArray(contribution.experiments)) {
+              console.log("Available experiments:", contribution.experiments.map(e => e.experiment));
+            }
+            if (contribution.measurements && Array.isArray(contribution.measurements)) {
+              const expNames = [...new Set(contribution.measurements.map(m => m.experiment))];
+              console.log("Experiments in measurements:", expNames);
+            }
+          }
+        });
+        
+        console.log("Total measurements found:", allMeasurements.length);
+        
+        if (allMeasurements.length === 0) {
+          if (!contributionFound) {
+            throw new Error(`No contributions found in index ${index}.`);
+          } else {
+            throw new Error(`No measurements found for experiment ${experimentName}. Available experiments: ${resp.body.hits.hits.length > 0 && resp.body.hits.hits[0]._source.summary ? JSON.stringify(resp.body.hits.hits[0]._source.summary._all.experiment) : 'none found'}`);
+          }
+        }
+        
+        // Sort by temperature (handle various possible field names)
+        allMeasurements.sort((a, b) => {
+          const tempA = parseFloat(a.measurement_step_heat_temperature || a.temperature || a.temp || a.step_temperature) || 0;
+          const tempB = parseFloat(b.measurement_step_heat_temperature || b.temperature || b.temp || b.step_temperature) || 0;
+          return tempA - tempB;
+        });
+        
+        return allMeasurements;
+      } catch(error) {
+        console.error("esGetMeasurementsForExperiment", index, experimentName, error.message);
+        throw new Meteor.Error("esGetMeasurementsForExperiment", error.message);
+      }
     }
 
   });
