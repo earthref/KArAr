@@ -33,6 +33,8 @@ class SearchSummariesListItem extends React.Component {
       plateauLoading: {},
       loadingRequests: new Set(),
       plateauModalData: null,
+      windowWidth: window.innerWidth,
+      windowHeight: window.innerHeight,
       dataSaving: false,
       dataLevel: undefined,
       contributionData: undefined,
@@ -48,6 +50,29 @@ class SearchSummariesListItem extends React.Component {
       exclusive: false,
       selector: { trigger: ".accordion-trigger" },
     });
+    
+    // Add resize listener for responsive plateau plots
+    this.resizeTimeout = null;
+    this.handleResize = () => {
+      // Throttle resize events to prevent excessive re-renders
+      if (this.resizeTimeout) {
+        clearTimeout(this.resizeTimeout);
+      }
+      this.resizeTimeout = setTimeout(() => {
+        this.setState({
+          windowWidth: window.innerWidth,
+          windowHeight: window.innerHeight
+        });
+      }, 100); // 100ms throttle
+    };
+    window.addEventListener('resize', this.handleResize);
+  }
+
+  componentWillUnmount() {
+    // Clean up resize listener
+    if (this.handleResize) {
+      window.removeEventListener('resize', this.handleResize);
+    }
   }
 
   showData() {
@@ -908,7 +933,7 @@ class SearchSummariesListItem extends React.Component {
     );
   }
 
-  loadPlateauData(experimentName) {
+  loadPlateauData(experimentName, highPriority = false) {
     if (!experimentName) return;
     
     // Check if we already have data or are currently loading
@@ -944,24 +969,47 @@ class SearchSummariesListItem extends React.Component {
         // Process measurements to calculate plateau data
         try {
           const plateauResult = PlateauCalculations.processPlateauData(measurements);
-          this.setState({
+          const newState = {
             loadingRequests: updatedLoadingRequests,
             plateauData: { ...this.state.plateauData, [experimentName]: plateauResult },
             plateauLoading: { ...this.state.plateauLoading, [experimentName]: false }
-          });
+          };
+          
+          // If modal is waiting for this data, update it
+          if (this.state.plateauModalData && 
+              this.state.plateauModalData.loading && 
+              this.state.plateauModalData.experimentName === experimentName) {
+            newState.plateauModalData = plateauResult;
+          }
+          
+          this.setState(newState);
         } catch (processingError) {
           console.error('Error processing plateau data for experiment', experimentName, processingError);
-          this.setState({
+          const newState = {
             loadingRequests: updatedLoadingRequests,
             plateauData: { ...this.state.plateauData, [experimentName]: null },
             plateauLoading: { ...this.state.plateauLoading, [experimentName]: false }
-          });
+          };
+          
+          // If modal is waiting for this data, show error
+          if (this.state.plateauModalData && 
+              this.state.plateauModalData.loading && 
+              this.state.plateauModalData.experimentName === experimentName) {
+            newState.plateauModalData = { error: true, experimentName: experimentName };
+          }
+          
+          this.setState(newState);
         }
       });
     });
   }
 
   renderAgePlateau(item) {
+    // Only show plateau for Experiments level
+    if (this.props.table !== "experiments") {
+      return null;
+    }
+
     // Check if we have experiment data that could contain measurements
     const hasExperiments = item.summary && item.summary._all && item.summary._all.experiment;
     
@@ -976,16 +1024,21 @@ class SearchSummariesListItem extends React.Component {
     // Load data if not already loaded or loading (check for undefined specifically)
     if (!isLoading && plateauResult === undefined) {
       this.loadPlateauData(experimentName);
-      return this.renderLoadingPlateau();
+      return this.renderLoadingPlateau(experimentName);
     }
 
     // Show loading state
     if (isLoading) {
-      return this.renderLoadingPlateau();
+      return this.renderLoadingPlateau(experimentName);
     }
 
     // Show plateau plot if data is available
     if (plateauResult && plateauResult.ageData && plateauResult.ageData.length > 0) {
+      // Check if all cumulative 39Ar values are 0
+      const allCumArZero = plateauResult.ageData.every(d => d.cumAr39 === 0);
+      if (allCumArZero) {
+        return this.renderNoPlateauMessage(); // Show placeholder if all cumulative values are 0
+      }
       return this.renderPlateauPlot(plateauResult);
     }
 
@@ -993,7 +1046,8 @@ class SearchSummariesListItem extends React.Component {
     return this.renderNoPlateauMessage();
   }
 
-  renderLoadingPlateau() {
+  renderLoadingPlateau(experimentName = null) {
+    const isClickable = experimentName !== null;
     return (
       <div
         style={{
@@ -1005,7 +1059,11 @@ class SearchSummariesListItem extends React.Component {
           color: "#666",
           textAlign: "center",
           overflow: "hidden",
+          cursor: isClickable ? "pointer" : "default",
+          opacity: isClickable ? 1 : 0.7
         }}
+        onClick={isClickable ? () => this.openModalAndWaitForData(experimentName) : undefined}
+        title={isClickable ? "Click to open modal and wait for data" : "Loading data..."}
       >
         <br />
         Loading
@@ -1074,37 +1132,43 @@ class SearchSummariesListItem extends React.Component {
         {/* Plateau region highlight */}
         {plateauSteps.length > 0 && (
           <rect 
-            x={padding.left + xScale(ageData[plateauSteps[0]].cumAr39)} 
+            x={padding.left + xScale(plateauSteps[0] > 0 ? ageData[plateauSteps[0]-1].cumAr39 : 0)} 
             y={padding.top}
-            width={xScale(ageData[plateauSteps[plateauSteps.length-1]].cumAr39) - xScale(ageData[plateauSteps[0]].cumAr39)}
+            width={xScale(ageData[plateauSteps[plateauSteps.length-1]].cumAr39) - xScale(plateauSteps[0] > 0 ? ageData[plateauSteps[0]-1].cumAr39 : 0)}
             height={plotHeight}
             fill="rgba(100, 150, 200, 0.1)"
           />
         )}
         
-        {/* Data points with error bars */}
+        {/* Data points with error boxes */}
         {ageData.map((d, i) => {
-          const x = padding.left + xScale(d.cumAr39);
           const y = padding.top + yScale(d.age);
           const errorTop = padding.top + yScale(d.age + d.age_sigma);
           const errorBottom = padding.top + yScale(d.age - d.age_sigma);
           const isPlateauStep = plateauSteps.includes(i);
           
+          // Calculate variable box width based on cumulative 39Ar range
+          const prevCumAr39 = i > 0 ? ageData[i-1].cumAr39 : 0;
+          const currCumAr39 = d.cumAr39;
+          const ar39Range = currCumAr39 - prevCumAr39;
+          
+          // Convert cumulative percentages to x coordinates
+          const xStart = padding.left + xScale(prevCumAr39);
+          const xEnd = padding.left + xScale(currCumAr39);
+          const boxWidth = xEnd - xStart;
+          const boxHeight = Math.abs(errorBottom - errorTop);
+          
           return (
             <g key={i}>
-              {/* Error bar */}
-              <line 
-                x1={x} y1={errorTop} 
-                x2={x} y2={errorBottom} 
-                stroke={isPlateauStep ? "#0066cc" : "#666"} 
+              {/* Error box - spans from previous to current cumulative 39Ar */}
+              <rect 
+                x={xStart} 
+                y={errorTop} 
+                width={boxWidth} 
+                height={boxHeight}
+                fill={isPlateauStep ? "#e6f2ff" : "#f5f5f5"} 
+                stroke={isPlateauStep ? "#0066cc" : "#999"} 
                 strokeWidth={0.8}
-              />
-              {/* Point */}
-              <circle 
-                cx={x} 
-                cy={y} 
-                r={isPlateauStep ? 1.8 : 1.2} 
-                fill={isPlateauStep ? "#0066cc" : "#666"}
               />
             </g>
           );
@@ -1113,7 +1177,7 @@ class SearchSummariesListItem extends React.Component {
         {/* Plateau age line */}
         {plateauSteps.length > 0 && plateauAge > 0 && (
           <line 
-            x1={padding.left + xScale(ageData[plateauSteps[0]].cumAr39)} 
+            x1={padding.left + xScale(plateauSteps[0] > 0 ? ageData[plateauSteps[0]-1].cumAr39 : 0)} 
             y1={padding.top + yScale(plateauAge)}
             x2={padding.left + xScale(ageData[plateauSteps[plateauSteps.length-1]].cumAr39)} 
             y2={padding.top + yScale(plateauAge)}
@@ -1169,13 +1233,37 @@ class SearchSummariesListItem extends React.Component {
     });
   }
 
+  openModalAndWaitForData(experimentName) {
+    // Set modal data with loading state and higher priority
+    this.setState({
+      plateauModalData: { loading: true, experimentName: experimentName }
+    }, () => {
+      $(this.refs["plateau modal"]).modal("show");
+      // Set higher priority for this experiment's data loading
+      this.loadPlateauData(experimentName, true); // true = high priority
+    });
+  }
+
   renderFullPlateauPlot(plateauResult) {
-    const { ageData, plateau } = plateauResult;
+    const { ageData, plateau, totalSteps, uniqueSteps, duplicatesRemoved } = plateauResult;
     
-    // Scale to full width with 2:1 aspect ratio
-    const containerWidth = window.innerWidth * 0.9; // Use 90% of viewport width
-    const width = Math.min(containerWidth, 1200); // Cap at 1200px
-    const height = width / 2; // 2:1 aspect ratio
+    // Calculate responsive dimensions with constraints
+    // Account for modal padding (20px each side = 40px total) and some margin
+    const availableWidth = this.state.windowWidth - 80; // Leave 80px total margin
+    const maxHeight = this.state.windowHeight * 0.5; // Maximum height is 50% of viewport
+    
+    let width = Math.min(availableWidth, 1200); // Cap at 1200px but use available width
+    let height = width / 2; // 2:1 aspect ratio
+    
+    // Apply maximum height constraint
+    if (height > maxHeight) {
+      height = maxHeight;
+      width = height * 2; // Maintain 2:1 aspect ratio
+    }
+    
+    // Ensure minimum width
+    width = Math.max(width, 400);
+    
     const padding = { top: 40, right: 60, bottom: 80, left: 80 };
     const plotWidth = width - padding.left - padding.right;
     const plotHeight = height - padding.top - padding.bottom;
@@ -1196,7 +1284,7 @@ class SearchSummariesListItem extends React.Component {
     const mswd = plateau.mswd || 0;
 
     return (
-      <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <div style={{ height: "100%", display: "flex", flexDirection: "column", maxWidth: "100%", overflow: "hidden" }}>
         <div style={{ textAlign: "center", marginBottom: "20px", flexShrink: 0 }}>
           <h3>Age Plateau Analysis</h3>
           {plateauAge > 0 && (
@@ -1206,13 +1294,14 @@ class SearchSummariesListItem extends React.Component {
               <span style={{ fontSize: "14px", color: "#666" }}>
                 MSWD: {mswd.toFixed(2)} | {plateauSteps.length} steps | 
                 {plateau.ar39Percent ? ` ${plateau.ar39Percent.toFixed(1)}% ³⁹Ar` : ''}
+                {duplicatesRemoved > 0 && ` | ${uniqueSteps}/${totalSteps} unique steps`}
               </span>
             </div>
           )}
         </div>
         
-        <div style={{ flexShrink: 0, textAlign: "center" }}>
-          <svg width={width} height={height} style={{ display: "block", margin: "0 auto" }}>
+        <div style={{ flexShrink: 0, textAlign: "center", maxWidth: "100%", overflow: "hidden" }}>
+          <svg viewBox={`0 0 ${width} ${height}`} style={{ display: "block", margin: "0 auto", width: "100%", height: "auto", maxWidth: `${width}px` }}>
           {/* Background */}
           <rect width={width} height={height} fill="white" stroke="#ddd" strokeWidth={1} />
           
@@ -1232,61 +1321,54 @@ class SearchSummariesListItem extends React.Component {
           {/* Plateau region highlight */}
           {plateauSteps.length > 0 && (
             <rect 
-              x={padding.left + xScale(ageData[plateauSteps[0]].cumAr39)} 
+              x={padding.left + xScale(plateauSteps[0] > 0 ? ageData[plateauSteps[0]-1].cumAr39 : 0)} 
               y={padding.top}
-              width={xScale(ageData[plateauSteps[plateauSteps.length-1]].cumAr39) - xScale(ageData[plateauSteps[0]].cumAr39)}
+              width={xScale(ageData[plateauSteps[plateauSteps.length-1]].cumAr39) - xScale(plateauSteps[0] > 0 ? ageData[plateauSteps[0]-1].cumAr39 : 0)}
               height={plotHeight}
               fill="rgba(100, 150, 200, 0.15)"
             />
           )}
           
-          {/* Data points with error bars */}
+          {/* Data points with error boxes */}
           {ageData.map((d, i) => {
-            const x = padding.left + xScale(d.cumAr39);
             const y = padding.top + yScale(d.age);
             const errorTop = padding.top + yScale(d.age + d.age_sigma);
             const errorBottom = padding.top + yScale(d.age - d.age_sigma);
             const isPlateauStep = plateauSteps.includes(i);
             
+            // Calculate variable box width based on cumulative 39Ar range
+            const prevCumAr39 = i > 0 ? ageData[i-1].cumAr39 : 0;
+            const currCumAr39 = d.cumAr39;
+            
+            // Convert cumulative percentages to x coordinates
+            const xStart = padding.left + xScale(prevCumAr39);
+            const xEnd = padding.left + xScale(currCumAr39);
+            const boxWidth = xEnd - xStart;
+            const boxHeight = Math.abs(errorBottom - errorTop);
+            const xCenter = xStart + boxWidth / 2;
+            
             return (
               <g key={i}>
-                {/* Error bar */}
-                <line 
-                  x1={x} y1={errorTop} 
-                  x2={x} y2={errorBottom} 
-                  stroke={isPlateauStep ? "#0066cc" : "#666"} 
-                  strokeWidth={2}
-                />
-                <line 
-                  x1={x-3} y1={errorTop} 
-                  x2={x+3} y2={errorTop} 
-                  stroke={isPlateauStep ? "#0066cc" : "#666"} 
-                  strokeWidth={2}
-                />
-                <line 
-                  x1={x-3} y1={errorBottom} 
-                  x2={x+3} y2={errorBottom} 
-                  stroke={isPlateauStep ? "#0066cc" : "#666"} 
-                  strokeWidth={2}
-                />
-                {/* Point */}
-                <circle 
-                  cx={x} 
-                  cy={y} 
-                  r={isPlateauStep ? 4 : 3} 
-                  fill={isPlateauStep ? "#0066cc" : "#666"}
-                  stroke="white"
-                  strokeWidth={1}
+                {/* Error box - spans from previous to current cumulative 39Ar */}
+                <rect 
+                  x={xStart} 
+                  y={errorTop} 
+                  width={boxWidth} 
+                  height={boxHeight}
+                  fill={isPlateauStep ? "#e6f2ff" : "#f5f5f5"} 
+                  stroke={isPlateauStep ? "#0066cc" : "#999"} 
+                  strokeWidth={1.5}
                 />
                 {/* Step label */}
                 <text
-                  x={x}
-                  y={y - 10}
+                  x={xCenter}
+                  y={errorTop - 8}
                   textAnchor="middle"
-                  fontSize="10"
+                  fontSize="12"
                   fill="#333"
+                  fontWeight={isPlateauStep ? "bold" : "normal"}
                 >
-                  {i + 1}
+                  {d.step}
                 </text>
               </g>
             );
@@ -1295,7 +1377,7 @@ class SearchSummariesListItem extends React.Component {
           {/* Plateau age line */}
           {plateauSteps.length > 0 && plateauAge > 0 && (
             <line 
-              x1={padding.left + xScale(ageData[plateauSteps[0]].cumAr39)} 
+              x1={padding.left + xScale(plateauSteps[0] > 0 ? ageData[plateauSteps[0]-1].cumAr39 : 0)} 
               y1={padding.top + yScale(plateauAge)}
               x2={padding.left + xScale(ageData[plateauSteps[plateauSteps.length-1]].cumAr39)} 
               y2={padding.top + yScale(plateauAge)}
@@ -1353,14 +1435,14 @@ class SearchSummariesListItem extends React.Component {
         {/* Data table */}
         <div style={{ marginTop: "20px", flex: "1", overflowY: "auto", minHeight: "150px" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
-            <thead>
+            <thead style={{ position: "sticky", top: 0, zIndex: 10 }}>
               <tr style={{ backgroundColor: "#f5f5f5" }}>
-                <th style={{ border: "1px solid #ddd", padding: "5px" }}>Step</th>
-                <th style={{ border: "1px solid #ddd", padding: "5px" }}>Temp (°C)</th>
-                <th style={{ border: "1px solid #ddd", padding: "5px" }}>Age (Ma)</th>
-                <th style={{ border: "1px solid #ddd", padding: "5px" }}>±1σ</th>
-                <th style={{ border: "1px solid #ddd", padding: "5px" }}>Cum. ³⁹Ar (%)</th>
-                <th style={{ border: "1px solid #ddd", padding: "5px" }}>Plateau</th>
+                <th style={{ border: "1px solid #ddd", padding: "5px", backgroundColor: "#f5f5f5", position: "sticky", top: 0, textAlign: "center" }}>Step</th>
+                <th style={{ border: "1px solid #ddd", padding: "5px", backgroundColor: "#f5f5f5", position: "sticky", top: 0, textAlign: "center" }}>Temp (°C)</th>
+                <th style={{ border: "1px solid #ddd", padding: "5px", backgroundColor: "#f5f5f5", position: "sticky", top: 0, textAlign: "center" }}>Age (Ma)</th>
+                <th style={{ border: "1px solid #ddd", padding: "5px", backgroundColor: "#f5f5f5", position: "sticky", top: 0, textAlign: "center" }}>±1σ</th>
+                <th style={{ border: "1px solid #ddd", padding: "5px", backgroundColor: "#f5f5f5", position: "sticky", top: 0, textAlign: "center" }}>Cum. ³⁹Ar (%)</th>
+                <th style={{ border: "1px solid #ddd", padding: "5px", backgroundColor: "#f5f5f5", position: "sticky", top: 0, textAlign: "center" }}>Plateau</th>
               </tr>
             </thead>
             <tbody>
@@ -2436,6 +2518,58 @@ class SearchSummariesListItem extends React.Component {
 
   renderPlateauModal() {
     if (!this.state.plateauModalData) return null;
+    
+    // Handle loading state in modal
+    if (this.state.plateauModalData.loading) {
+      const experimentName = this.state.plateauModalData.experimentName;
+      const plateauResult = this.state.plateauData[experimentName];
+      
+      return (
+        <div ref="plateau modal" className="ui fullscreen modal">
+          <i className="close icon"></i>
+          <div className="header">Age Plateau Analysis - {experimentName}</div>
+          <div className="content" style={{ padding: "20px", height: "calc(100vh - 10em)", overflowY: "auto", overflowX: "hidden" }}>
+            {plateauResult ? 
+              this.renderFullPlateauPlot(plateauResult) :
+              <div style={{ textAlign: "center", marginTop: "100px", fontSize: "18px", color: "#666" }}>
+                Loading
+                <br />
+                <b>
+                  Age
+                  <br />
+                  Plateau
+                </b>
+                <br />
+                for experiment {experimentName}...
+              </div>
+            }
+          </div>
+        </div>
+      );
+    }
+    
+    // Handle error state in modal
+    if (this.state.plateauModalData.error) {
+      const experimentName = this.state.plateauModalData.experimentName;
+      
+      return (
+        <div ref="plateau modal" className="ui fullscreen modal">
+          <i className="close icon"></i>
+          <div className="header">Age Plateau Analysis - {experimentName}</div>
+          <div className="content" style={{ padding: "20px", height: "calc(100vh - 10em)", overflowY: "auto", overflowX: "hidden" }}>
+            <div style={{ textAlign: "center", marginTop: "100px", fontSize: "18px", color: "#cc3300" }}>
+              <i className="exclamation triangle icon" style={{ fontSize: "48px" }}></i>
+              <br /><br />
+              Error loading plateau data for experiment {experimentName}
+              <br />
+              <span style={{ fontSize: "14px", color: "#666" }}>
+                Please check that the experiment has valid measurement data.
+              </span>
+            </div>
+          </div>
+        </div>
+      );
+    }
     
     return (
       <div ref="plateau modal" className="ui fullscreen modal">
