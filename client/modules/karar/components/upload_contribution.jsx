@@ -453,7 +453,8 @@ export default class UploadContribution extends React.Component {
     let labNames = _.compact(_.map(_.split(row.lab_names || '', ':'), _.trim)).join(':');
 
     let setLabNames = () => {
-      if (!labNames || labNames === existing.lab_names) return callback();
+      let existingLabNames = _.isArray(existing.lab_names) ? existing.lab_names.join(':') : existing.lab_names;
+      if (!labNames || labNames === existingLabNames) return callback();
       Meteor.call('esUpdateContributionLabNames', {
         index: index,
         id: id,

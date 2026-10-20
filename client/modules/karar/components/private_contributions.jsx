@@ -17,30 +17,16 @@ import IconButton from "/client/modules/common/components/icon_button";
 import {index} from "/lib/configs/karar/search_levels.js";
 import {versions, models} from '/lib/configs/karar/data_models';
 import {cvs} from '/lib/modules/er/controlled_vocabularies';
+import {splitDelimited} from '/lib/modules/karar/split_delimited';
 
 // Parse a Dictionary value (funding or supplemental_links) into [{title, url}].
 // Accepts an array of "Title[url]" entries, the data model string
 // ("Title[url]":"Title[url]"), or an older semicolon-separated string.
 const parseDictionary = (value) => {
-  let entries = [];
-  if (_.isArray(value)) {
-    entries = value;
-  } else if (_.isString(value) && value.includes(";")) {
-    entries = value.split(";");
-  } else if (_.isString(value)) {
-    let entry = "", inQuotes = false, depth = 0;
-    for (let c of value) {
-      if (c === '"') inQuotes = !inQuotes;
-      else if (c === "[" && !inQuotes) depth++;
-      else if (c === "]" && !inQuotes && depth > 0) depth--;
-      if (c === ":" && !inQuotes && depth === 0) {
-        entries.push(entry);
-        entry = "";
-      } else entry += c;
-    }
-    entries.push(entry);
-  }
-  return _.compact(entries.map((x) => _.trim(_.trim(`${x}`), '"').trim())).map((x) => {
+  let entries = _.isString(value) && value.includes(";") ?
+    _.compact(value.split(";").map(x => _.trim(_.trim(x), '"').trim())) :
+    splitDelimited(value);
+  return entries.map((x) => {
     let i = x.indexOf("[");
     return i < 0 ?
       { title: x, url: "" } :
@@ -504,7 +490,8 @@ export default class extends React.Component {
                         <Dropdown multiple selection
                           defaultValue={
                             (c.lab_names && c.lab_names.split(":")) ||
-                            (c.summary.contribution.lab_names && c.summary.contribution.lab_names.split && c.summary.contribution.lab_names.split(":")) ||
+                            (_.isArray(c.summary.contribution.lab_names) && c.summary.contribution.lab_names) ||
+                            (_.isString(c.summary.contribution.lab_names) && _.compact(c.summary.contribution.lab_names.split(":"))) ||
                             ""
                           }
                           placeholder="Select one or more laboratories where the measurements in the contribution were made"
