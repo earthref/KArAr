@@ -911,6 +911,47 @@ export default function () {
       }
     },
 
+    // Set a Dictionary column (funding or supplemental_links) of the contribution.
+    // list is an array of "Title[url]" entries. The summary keeps the array and the
+    // contribution table row gets the data model string: "Title[url]":"Title[url]".
+    async esUpdateContributionData({index, id, field, list}) {
+      // console.log("esUpdateContributionData", index, id, field, list);
+      this.unblock();
+
+      try {
+        if (!_.includes(["funding", "supplemental_links"], field))
+          throw new Error(`Unsupported field "${field}".`);
+        list = _.compact(_.map(list || [], (x) => _.trim(`${x}`).replace(/"/g, "'")))
+          .filter((x) => x !== "[]");
+        const list_string = list.map((x) => `"${x}"`).join(":");
+
+        await esClient.update({
+          "index": index,
+          "type": "_doc",
+          "id": id + "_0",
+          "refresh": true,
+          "retryOnConflict": 5,
+          "body": {
+            "script": {
+              "source": `
+                ctx._source.summary.contribution._is_valid = "false";
+                ctx._source.summary.contribution[params.field] = params.list;
+                if (ctx._source.contribution == null) { ctx._source.contribution = [:]; }
+                if (ctx._source.contribution.contribution == null || ctx._source.contribution.contribution.size() == 0) {
+                  ctx._source.contribution.contribution = [[:]];
+                }
+                ctx._source.contribution.contribution[0][params.field] = params.list_string;
+              `,
+              "params": {field, list, list_string}
+            }
+          }
+        });
+      } catch(error) {
+        console.error("esUpdateContributionData", index, id, field, list, error.message);
+        throw new Meteor.Error("esUpdateContributionData", error.message);
+      }
+    },
+
     // TODO: pass login token to authenticate changes
     async esUpdateContributionReference({index, id, contributor, _contributor, timestamp, reference, description}) {
       // console.log("esUpdateContributionReference", index, id, contributor, _contributor, timestamp, reference, description);

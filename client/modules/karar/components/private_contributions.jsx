@@ -18,6 +18,36 @@ import {index} from "/lib/configs/karar/search_levels.js";
 import {versions, models} from '/lib/configs/karar/data_models';
 import {cvs} from '/lib/modules/er/controlled_vocabularies';
 
+// Parse a Dictionary value (funding or supplemental_links) into [{title, url}].
+// Accepts an array of "Title[url]" entries, the data model string
+// ("Title[url]":"Title[url]"), or an older semicolon-separated string.
+const parseDictionary = (value) => {
+  let entries = [];
+  if (_.isArray(value)) {
+    entries = value;
+  } else if (_.isString(value) && value.includes(";")) {
+    entries = value.split(";");
+  } else if (_.isString(value)) {
+    let entry = "", inQuotes = false, depth = 0;
+    for (let c of value) {
+      if (c === '"') inQuotes = !inQuotes;
+      else if (c === "[" && !inQuotes) depth++;
+      else if (c === "]" && !inQuotes && depth > 0) depth--;
+      if (c === ":" && !inQuotes && depth === 0) {
+        entries.push(entry);
+        entry = "";
+      } else entry += c;
+    }
+    entries.push(entry);
+  }
+  return _.compact(entries.map((x) => _.trim(_.trim(`${x}`), '"').trim())).map((x) => {
+    let i = x.indexOf("[");
+    return i < 0 ?
+      { title: x, url: "" } :
+      { title: _.trim(x.slice(0, i)), url: _.trim(x.slice(i + 1).replace(/\]\s*$/, "")) };
+  });
+};
+
 export default class extends React.Component {
 
   constructor(props) {
@@ -194,6 +224,101 @@ export default class extends React.Component {
     );
   }
 
+  updateFunding(i) {
+    this.privateContributions[i].updatingFunding = true;
+    this.setState({taps: this.state.taps + 1}, () =>
+      Meteor.call("esUpdateContributionData", {
+        index: index,
+        id: this.privateContributions[i].summary.contribution.id,
+        field: "funding",
+        list: (this.privateContributions[i].funding || [])
+          .filter(x => _.trim(x.title) || _.trim(x.url))
+          .map(x => `${_.trim(x.title)}[${_.trim(x.url)}]`)
+      }, (error, c) => {
+        if (error) console.error(error);
+        this.updateContributions();
+      })
+    );
+  }
+
+  updateSupplementalLinks(i) {
+    this.privateContributions[i].updatingSupplementalLinks = true;
+    this.setState({taps: this.state.taps + 1}, () =>
+      Meteor.call("esUpdateContributionData", {
+        index: index,
+        id: this.privateContributions[i].summary.contribution.id,
+        field: "supplemental_links",
+        list: (this.privateContributions[i].supplemental_links || [])
+          .filter(x => _.trim(x.title) || _.trim(x.url))
+          .map(x => `${_.trim(x.title)}[${_.trim(x.url)}]`)
+      }, (error, c) => {
+        if (error) console.error(error);
+        this.updateContributions();
+      })
+    );
+  }
+
+  // One editable row for a funding or supplemental link entry.
+  renderDictionaryRow(c, i, j, item, label, titlePlaceholder, urlPlaceholder, field, items, updating, update) {
+    // Only this row's Save lights up, and only if it is new or differs from what is saved.
+    let saved = parseDictionary(c.summary.contribution[field])[j];
+    let changed = !saved || saved.title !== _.trim(item.title) || saved.url !== _.trim(item.url);
+    return (
+      <div key={field + j} className="ui attached secondary segment" style={{padding: "0.5em"}} ref={(el) => el && el.style.setProperty('width', 'calc(100% + 2px)', 'important')}>
+        <div style={{display: "flex"}}>
+          <div style={{flex: "1 1 auto"}}>
+            <div className="ui labeled fluid small input">
+              <div className="ui label" style={{position: "relative"}}>
+                {label}
+              </div>
+              <input type="text" default="None" placeholder={titlePlaceholder}
+                value={item.title} readOnly={updating}
+                style={{ borderRadius: 0 }}
+                onChange={(e) => {
+                  c[field] = c[field] || items;
+                  c[field][j].title = e.target.value;
+                  this.setState({taps: this.state.taps + 1});
+                }}
+                onKeyPress={(e) => { if (e.key === "Enter") update(i); }}
+              />
+              <input type="text" default="None" placeholder={urlPlaceholder}
+                value={item.url} readOnly={updating}
+                style={{ borderRadius: 0 }}
+                onChange={(e) => {
+                  c[field] = c[field] || items;
+                  c[field][j].url = e.target.value;
+                  this.setState({taps: this.state.taps + 1});
+                }}
+                onKeyPress={(e) => { if (e.key === "Enter") update(i); }}
+              />
+              <div className={
+                  "ui small right attached icon button" +
+                  (changed ? " red" : " disabled") +
+                  (updating ? " disabled loading" : "")
+                }
+                style={{ marginRight: 0, whiteSpace: "nowrap" }}
+                onClick={() => update(i)}
+              >
+                <i className="save link icon"/>&nbsp;Save
+              </div>
+            </div>
+          </div>
+          <div className={"ui small purple button" + (updating ? " disabled loading" : "")}
+            style={{margin: "0 0 0 0.5em", whiteSpace: "nowrap"}}
+            onClick={() => {
+              c[field] = c[field] || items;
+              c[field].splice(j, 1);
+              update(i);
+            }}
+          >
+            <i className="minus icon"/>
+            This {label}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   renderOffline() {
     return (
       <div ref="segment" className="ui warning message">
@@ -309,6 +434,8 @@ export default class extends React.Component {
           :
           this.privateContributions.map((c,i) => {
             let hasReference = c.summary.contribution._reference && c.summary.contribution._reference.doi;
+            let funding = c.funding || parseDictionary(c.summary.contribution.funding);
+            let supplementalLinks = c.supplemental_links || parseDictionary(c.summary.contribution.supplemental_links);
             //console.log("ref", c, noReference);
             return (
               <div className="item" key={i} style={{marginBottom: "1.5em"}}>
@@ -411,8 +538,34 @@ export default class extends React.Component {
                         </div>
                       </div>
                     </div>
+                    <div className="ui small purple button" style={{margin: "0 0 0 0.5em", whiteSpace: "nowrap"}}
+                      onClick={() => {
+                        c.funding = [...funding, {title: "", url: ""}];
+                        this.setState({taps: this.state.taps + 1});
+                      }}
+                    >
+                      <i className="add icon"/>
+                      Funding
+                    </div>
+                    <div className="ui small purple button" style={{margin: "0 0 0 0.5em", whiteSpace: "nowrap"}}
+                      onClick={() => {
+                        c.supplemental_links = [...supplementalLinks, {title: "", url: ""}];
+                        this.setState({taps: this.state.taps + 1});
+                      }}
+                    >
+                      <i className="add icon"/>
+                      Supplement
+                    </div>
                   </div>
                 </div>
+                {funding.map((item, j) =>
+                  this.renderDictionaryRow(c, i, j, item, "Funding", "Grant Title", "Grant URL",
+                    "funding", funding, c.updatingFunding, this.updateFunding.bind(this))
+                )}
+                {supplementalLinks.map((item, j) =>
+                  this.renderDictionaryRow(c, i, j, item, "Supplement", "Supplement Title", "Supplement DOI or URL",
+                    "supplemental_links", supplementalLinks, c.updatingSupplementalLinks, this.updateSupplementalLinks.bind(this))
+                )}
                 <div className="ui attached secondary segment" style={{padding: "0.5em"}} ref={(el) => el && el.style.setProperty('width', 'calc(100% + 2px)', 'important')}>
                   <div style={{display: "flex", flexFlow: "row wrap"}}>
                     <div style={{flex: "1 1 auto"}}>
