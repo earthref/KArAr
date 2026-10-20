@@ -68,10 +68,11 @@ describe("karar.data_doi", () => {
                   { exists: { field: "summary.contribution.version" } },
                   { term: { "summary.contribution._is_activated": "true" } },
                 ],
-                // "must_not": [{ "term": { "summary.contribution._has_data_doi": "true"}}],
-                // filter: { term: { "summary.contribution.id": 19778 } },
-                // filter: { term: { "summary.contribution.id": 20193 } },
-                // filter: { terms: { "summary.contribution.id": [14489, 17454,19501,19584,19589,19562,19921,20019,20020,20176,19778,20181] } },
+                must_not: [
+                  { term: { "summary.contribution._has_data_doi": "true" } },
+                ],
+                // or, to force specific ones:
+                // filter: { terms: { "summary.contribution.id": [24, 25] } },
               },
             },
           },
@@ -79,7 +80,7 @@ describe("karar.data_doi", () => {
         .then((resp) => {
           console.log(
             "Contributions without a data DOI:",
-            resp.body.hits.total
+            resp.body.hits.total,
           );
           if (resp.body.hits.total.value === 0) {
             console.log("No DOIs to be minted. Exiting.");
@@ -152,7 +153,7 @@ describe("karar.data_doi", () => {
                       `<relatedIdentifiers>` +
                         `<relatedIdentifier relatedIdentifierType="DOI" relationType="IsCitedBy">` +
                         `${htmlEncode(
-                          hit._source.summary.contribution._reference.doi
+                          hit._source.summary.contribution._reference.doi,
                         )}` +
                         `</relatedIdentifier>` +
                         (previous_version_doi
@@ -174,9 +175,9 @@ describe("karar.data_doi", () => {
                             subjectScheme="earthref.karar.geologic_classes"
                             schemeURI="https://earthref.org/KArAr/data-models/1.0?q=geologic_classes"
                             valueURI="https://earthref.org/vocabularies/controlled?q=${geologic_class}"
-                          >${geologic_class}</subject>`
+                          >${geologic_class}</subject>`,
                         );
-                      }
+                      },
                     );
                   hit._source.summary._all &&
                     hit._source.summary._all.geologic_types &&
@@ -187,9 +188,9 @@ describe("karar.data_doi", () => {
                             subjectScheme="earthref.karar.geologic_types"
                             schemeURI="https://earthref.org/KArAr/data-models/1.0?q=geologic_types"
                             valueURI="https://earthref.org/vocabularies/controlled?q=${geologic_type}"
-                          >${geologic_type}</subject>`
+                          >${geologic_type}</subject>`,
                         );
-                      }
+                      },
                     );
                   hit._source.summary._all &&
                     hit._source.summary._all.lithologies &&
@@ -200,9 +201,9 @@ describe("karar.data_doi", () => {
                             subjectScheme="earthref.karar.lithologies"
                             schemeURI="https://earthref.org/KArAr/data-models/1.0?q=lithologies"
                             valueURI="https://earthref.org/vocabularies/controlled?q=${lithology}"
-                          >${lithology}</subject>`
+                          >${lithology}</subject>`,
                         );
-                      }
+                      },
                     );
                   hit._source.summary._all &&
                     hit._source.summary._all._age_range_ybp &&
@@ -213,7 +214,7 @@ describe("karar.data_doi", () => {
                       `<subject
                         schemeURI="https://earthref.org/KArAr/data-models/1.0?q=age_low"
                         subjectScheme="earthref.karar.age_low"
-                      >${hit._source.summary._all._age_range_ybp.range.gte}</subject>`
+                      >${hit._source.summary._all._age_range_ybp.range.gte}</subject>`,
                     );
                   hit._source.summary._all &&
                     hit._source.summary._all._age_range_ybp &&
@@ -224,7 +225,7 @@ describe("karar.data_doi", () => {
                       `<subject
                         schemeURI="https://earthref.org/KArAr/data-models/1.0?q=age_high"
                         subjectScheme="earthref.karar.age_high"
-                      >${hit._source.summary._all._age_range_ybp.range.lte}</subject>`
+                      >${hit._source.summary._all._age_range_ybp.range.lte}</subject>`,
                     );
                   hit._source.summary._all &&
                     hit._source.summary._all._age_range_ybp &&
@@ -238,7 +239,7 @@ describe("karar.data_doi", () => {
                         subjectScheme="earthref.karar.age_unit"
                         schemeURI="https://earthref.org/KArAr/data-models/1.0?q=age_unit"
                         valueURI="https://earthref.org/vocabularies/controlled?q=Years BP"
-                      >Years BP</subject>`
+                      >Years BP</subject>`,
                     );
                   subjects =
                     (subjects.length &&
@@ -251,16 +252,15 @@ describe("karar.data_doi", () => {
                     _.sortedUniqBy(
                       _.sortBy(
                         hit._source.contribution.locations,
-                        (x) => `${x.lat_n}_${x.lat_s}_${x.lon_w}_${x.lon_e}`
+                        (x) => `${x.lat_n}_${x.lat_s}_${x.lon_w}_${x.lon_e}`,
                       ),
-                      (x) => `${x.lat_n}_${x.lat_s}_${x.lon_w}_${x.lon_e}`
+                      (x) => `${x.lat_n}_${x.lat_s}_${x.lon_w}_${x.lon_e}`,
                     ).forEach((location, i) => {
                       let n = geos.push("") - 1;
                       geos[n] += "<geoLocation>";
                       if (location.location)
-                        geos[
-                          n
-                        ] += `<geoLocationPlace>${location.location}</geoLocationPlace>`;
+                        geos[n] +=
+                          `<geoLocationPlace>${location.location}</geoLocationPlace>`;
                       if (
                         location.lat_n !== undefined &&
                         location.lon_w !== undefined &&
@@ -271,10 +271,10 @@ describe("karar.data_doi", () => {
                       ) {
                         geos[n] += `<geoLocationPoint>
                           <pointLongitude>${floatFix(
-                            normalizeLon(location.lon_w)
+                            normalizeLon(location.lon_w),
                           )}</pointLongitude>
                           <pointLatitude>${floatFix(
-                            location.lat_n
+                            location.lat_n,
                           )}</pointLatitude>
                         </geoLocationPoint>`;
                       } else if (
@@ -289,16 +289,16 @@ describe("karar.data_doi", () => {
                       ) {
                         geos[n] += `<geoLocationBox>
                           <westBoundLongitude>${floatFix(
-                            normalizeLon(location.lon_w)
+                            normalizeLon(location.lon_w),
                           )}</westBoundLongitude>
                           <eastBoundLongitude>${floatFix(
-                            normalizeLon(location.lon_e)
+                            normalizeLon(location.lon_e),
                           )}</eastBoundLongitude>
                           <southBoundLatitude>${floatFix(
-                            location.lat_s
+                            location.lat_s,
                           )}</southBoundLatitude>
                           <northBoundLatitude>${floatFix(
-                            location.lat_n
+                            location.lat_n,
                           )}</northBoundLatitude>
                         </geoLocationBox>`;
                       }
@@ -311,16 +311,15 @@ describe("karar.data_doi", () => {
                     _.sortedUniqBy(
                       _.sortBy(
                         hit._source.contribution.sites,
-                        (x) => `${x.lat}_${x.lon}_${x.location}_${x.site}`
+                        (x) => `${x.lat}_${x.lon}_${x.location}_${x.site}`,
                       ),
-                      (x) => `${x.lat}_${x.lon}_${x.location}_${x.site}`
+                      (x) => `${x.lat}_${x.lon}_${x.location}_${x.site}`,
                     ).forEach((site, i) => {
                       let n = geos.push("") - 1;
                       geos[n] += "<geoLocation>";
                       if (site.location && site.site)
-                        geos[
-                          n
-                        ] += `<geoLocationPlace>${site.location}: ${site.site}</geoLocationPlace>`;
+                        geos[n] +=
+                          `<geoLocationPlace>${site.location}: ${site.site}</geoLocationPlace>`;
                       if (
                         site.lat !== undefined &&
                         site.lon !== undefined &&
@@ -329,7 +328,7 @@ describe("karar.data_doi", () => {
                       )
                         geos[n] += `<geoLocationPoint>
                           <pointLongitude>${floatFix(
-                            normalizeLon(site.lon)
+                            normalizeLon(site.lon),
                           )}</pointLongitude>
                           <pointLatitude>${floatFix(site.lat)}</pointLatitude>
                         </geoLocationPoint>`;
@@ -352,11 +351,11 @@ describe("karar.data_doi", () => {
                     (labName) =>
                       `<contributor contributorType="HostingInstitution">
                       <contributorName>${htmlEncode(labName)}</contributorName>
-                    </contributor>`
+                    </contributor>`,
                   );
                   if (hit._source.summary.contribution.id == 16834)
                     contributors.push(
-                      '<contributor contributorType="ContactPerson"><contributorName>Joseph M Grappone (jmgrappone@gmail.com)</contributorName></contributor>'
+                      '<contributor contributorType="ContactPerson"><contributorName>Joseph M Grappone (jmgrappone@gmail.com)</contributorName></contributor>',
                     );
                   contributors =
                     contributors.length &&
@@ -371,7 +370,7 @@ describe("karar.data_doi", () => {
                   fundings = fundings.map((funding) => {
                     let funderName = funding.split("[")[0];
                     let awardURI = htmlEncode(
-                      funding.split("[")[1].slice(0, -1)
+                      funding.split("[")[1].slice(0, -1),
                     );
                     return (
                       ((funderName || awardURI) &&
@@ -413,14 +412,14 @@ describe("karar.data_doi", () => {
                                   author.affiliation
                                     .map(
                                       (affiliation) =>
-                                        `<affiliation>${affiliation}</affiliation>`
+                                        `<affiliation>${affiliation}</affiliation>`,
                                     )
                                     .join("")) ||
                                 ""
                               }
-                            </creator>`
+                            </creator>`,
                           );
-                      }
+                      },
                     );
                   creators =
                     (creators.length &&
@@ -449,12 +448,12 @@ describe("karar.data_doi", () => {
                     <title>${
                       (hit._source.summary.contribution._reference &&
                         htmlEncode(
-                          hit._source.summary.contribution._reference.title
+                          hit._source.summary.contribution._reference.title,
                         )) ||
                       "In Preparation"
                     } (Dataset)</title>
                   </titles>
-                  <publisher publisherIdentifier="https://ror.org/00f89wy98" publisherIdentifierScheme="ROR" schemeURI="https://ror.org/">Magnetics Information Consortium (KArAr)</publisher>
+                  <publisher publisherIdentifier="https://ror.org/00f89wy98" publisherIdentifierScheme="ROR" schemeURI="https://ror.org/">Earthref.org (KArAr)</publisher>
                   <publicationYear>${
                     (hit._source.summary.contribution.timestamp &&
                       moment
@@ -468,7 +467,7 @@ describe("karar.data_doi", () => {
                   <dates>
                     <date dateType="Available">${hit._source.summary.contribution.timestamp.substr(
                       0,
-                      10
+                      10,
                     )}</date>
                   </dates>
                   <language>en-US</language>
@@ -479,10 +478,10 @@ describe("karar.data_doi", () => {
                     <rights rightsURI="https://creativecommons.org/licenses/by/4.0/"/>
                   </rightsList>
                   <descriptions>
-                    <description descriptionType="Other">Paleomagnetic, rock magnetic, or geomagnetic data found in the KArAr data repository${
+                    <description descriptionType="Other">K/AR or 40Ar/39Ar rock dating data found in the KArAr data repository${
                       hit._source.summary.contribution._reference.title
                         ? ` from a paper titled: ${htmlEncode(
-                            hit._source.summary.contribution._reference.title
+                            hit._source.summary.contribution._reference.title,
                           )}`
                         : "."
                     }</description>
@@ -517,25 +516,31 @@ describe("karar.data_doi", () => {
                       body: payload,
                     },
                     function (error, response, body) {
+                      const id = hit._source.summary.contribution.id;
                       if (error) {
-                        console.error(error);
-                        resolve();
-                      } else if (
-                        body ===
-                        "error: bad request - identifier already exists"
+                        console.error(hit._id, "request error:", error);
+                        return resolve();
+                      }
+                      console.log(
+                        hit._id,
+                        "EZID",
+                        response.statusCode,
+                        JSON.stringify(body).slice(0, 300),
+                      );
+                      if (
+                        response.statusCode >= 200 &&
+                        response.statusCode < 300 &&
+                        /^success: /.test(body)
                       ) {
                         esClient
                           .update({
                             index: hit._index,
-                            type: "_doc",
                             id: hit._id,
                             refresh: true,
                             body: {
                               doc: {
                                 summary: {
-                                  contribution: {
-                                    _has_data_doi: "true",
-                                  },
+                                  contribution: { _has_data_doi: "true" },
                                 },
                               },
                             },
@@ -543,40 +548,27 @@ describe("karar.data_doi", () => {
                           .then(() => {
                             console.log(
                               hit._id,
-                              "already had a Data DOI minted"
+                              `minted/updated https://doi.org/10.7288/V4/KARAR/${id}`,
+                            );
+                            resolve();
+                          })
+                          .catch((e) => {
+                            console.error(
+                              hit._id,
+                              "OpenSearch update failed:",
+                              e.message,
                             );
                             resolve();
                           });
-                      } else if (/^error: /.test(body)) {
-                        console.error(hit._id, body);
-                        resolve();
                       } else {
-                        esClient
-                          .update({
-                            index: hit._index,
-                            type: "_doc",
-                            id: hit._id,
-                            refresh: true,
-                            body: {
-                              doc: {
-                                summary: {
-                                  contribution: {
-                                    _has_data_doi: "true",
-                                  },
-                                },
-                              },
-                            },
-                          })
-                          .then(() => {
-                            console.log(hit._id, "now has a Data DOI");
-                            resolve();
-                          });
+                        console.error(hit._id, "NOT minted");
+                        resolve();
                       }
-                    }
+                    },
                   );
                 });
               },
-              { concurrency: 5 }
+              { concurrency: 5 },
             ).then((results) => {
               done();
             });
