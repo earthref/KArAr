@@ -379,15 +379,32 @@ export default class UploadContribution extends React.Component {
           }
         });
       }
+      // Remember the contribution table row from the uploaded files (if any) so its
+      // reference DOI and lab names can be applied to the contribution after upload.
+      this.uploadedContributionRow = undefined;
+      for (let file of this.files) {
+        if (file.imported) file.imported.map((data) => {
+          if (data.table === 'contribution' && data.columns && data.rows && data.rows.length &&
+              this.uploadedContributionRow === undefined) {
+            this.uploadedContributionRow = _.reduce(data.rows[0], (json, column, j) => {
+              json[data.columns[j]] = column;
+              return json;
+            }, {});
+          }
+        });
+      }
+      let uploadedReference = this.uploadedContributionRow &&
+        _.trim(this.uploadedContributionRow.reference || '') || undefined;
       let contributionOverride = {
-        id: this.state._existing_summary.summary && 
-          this.state._existing_summary.summary.contribution && 
+        id: this.state._existing_summary.summary &&
+          this.state._existing_summary.summary.contribution &&
           this.state._existing_summary.summary.contribution.id || null,
         _contributor: this.state._contributor,
         timestamp: moment().utc().toISOString(),
-        reference: this.state._existing_summary.summary && 
-          this.state._existing_summary.summary.contribution && 
-          this.state._existing_summary.summary.contribution.reference || null,
+        reference: uploadedReference ||
+          this.state._existing_summary.summary &&
+          this.state._existing_summary.summary.contribution &&
+          this.state._existing_summary.summary.contribution.reference || undefined,
         version: this.state._existing_summary.summary && 
           this.state._existing_summary.summary.contribution && 
           this.state._existing_summary.summary.contribution.version || null
@@ -425,6 +442,44 @@ export default class UploadContribution extends React.Component {
     }
   }
 
+  // Apply the reference DOI and lab names from an uploaded contribution table so the
+  // contributor does not have to enter them again on the private contributions page.
+  // Values that are missing from the file, or unchanged, are left as they are.
+  applyContributionTableMetadata(id, callback) {
+    let row = this.uploadedContributionRow || {};
+    let existing = this.state._existing_summary.summary &&
+      this.state._existing_summary.summary.contribution || {};
+    let reference = _.toUpper(_.trim(row.reference || ''));
+    let labNames = _.compact(_.map(_.split(row.lab_names || '', ':'), _.trim)).join(':');
+
+    let setLabNames = () => {
+      if (!labNames || labNames === existing.lab_names) return callback();
+      Meteor.call('esUpdateContributionLabNames', {
+        index: index,
+        id: id,
+        lab_names: labNames
+      }, (error) => {
+        if (error) console.error('esUpdateContributionLabNames', id, error);
+        callback();
+      });
+    };
+
+    if (!reference || (reference === _.toUpper(_.trim(existing.reference || '')) && existing._reference))
+      return setLabNames();
+    // Set the reference first: it also assigns the version and history, then the lab names.
+    Meteor.call('esUpdateContributionReference', {
+      index: index,
+      id: id,
+      contributor: this.state._userid,
+      _contributor: this.state._contributor,
+      reference: reference,
+      description: row.description || existing.description
+    }, (error) => {
+      if (error) console.error('esUpdateContributionReference', id, error);
+      setLabNames();
+    });
+  }
+
   upload() {
     if (_.isEmpty(this.contribution) || _.isEmpty(this.summary)) {
       this.setState({
@@ -449,7 +504,7 @@ export default class UploadContribution extends React.Component {
         }, (error) => {
           console.log('updated contribution', this.state._id, error);
           if (error) { this.setState({uploadError: error, uploading: false});
-          } else { 
+          } else this.applyContributionTableMetadata(this.state._id, () => {
             Meteor.call('esUpdatePrivatePreSummaries', {
               index: index,
               id: this.state._id,
@@ -470,7 +525,7 @@ export default class UploadContribution extends React.Component {
                 });
               }
             });
-          }
+          });
         });
       } else {
         console.log('creating contribution');
@@ -485,7 +540,7 @@ export default class UploadContribution extends React.Component {
           console.log('created contribution', id, error);
           if (error) {
             this.setState({uploadError: error, uploading: false});
-          } else {
+          } else this.applyContributionTableMetadata(id, () => {
             Meteor.call('esUpdatePrivatePreSummaries', {
               index: index,
               id: id,
@@ -507,7 +562,7 @@ export default class UploadContribution extends React.Component {
                 });
               }
             });
-          }
+          });
         });
       }
     }

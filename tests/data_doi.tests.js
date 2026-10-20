@@ -364,14 +364,36 @@ describe("karar.data_doi", () => {
                   let fundings = [];
                   if (_.isArray(hit._source.summary.contribution.funding))
                     fundings = hit._source.summary.contribution.funding;
-                  if (_.isString(hit._source.summary.contribution.funding))
-                    fundings =
-                      hit._source.summary.contribution.funding.split(";");
+                  if (_.isString(hit._source.summary.contribution.funding)) {
+                    let funding = hit._source.summary.contribution.funding;
+                    if (funding.includes(";")) {
+                      // older records: entries separated by semicolons
+                      fundings = funding.split(";");
+                    } else {
+                      // data model format: colon-separated, ignoring colons in quotes or [urls]
+                      let entry = "", inQuotes = false, depth = 0;
+                      for (let c of funding) {
+                        if (c === '"') inQuotes = !inQuotes;
+                        else if (c === "[" && !inQuotes) depth++;
+                        else if (c === "]" && !inQuotes && depth > 0) depth--;
+                        if (c === ":" && !inQuotes && depth === 0) {
+                          fundings.push(entry);
+                          entry = "";
+                        } else entry += c;
+                      }
+                      fundings.push(entry);
+                    }
+                  }
+                  fundings = _.compact(
+                    fundings.map((x) => _.trim(_.trim(`${x}`), '"').trim()),
+                  );
                   fundings = fundings.map((funding) => {
-                    let funderName = funding.split("[")[0];
-                    let awardURI = htmlEncode(
-                      funding.split("[")[1].slice(0, -1),
-                    );
+                    let funderName = htmlEncode(_.trim(funding.split("[")[0]));
+                    let awardURI =
+                      funding.includes("[") &&
+                      htmlEncode(
+                        _.trim(funding.slice(funding.indexOf("[") + 1).replace(/\]\s*$/, "")),
+                      );
                     return (
                       ((funderName || awardURI) &&
                         `<fundingReference>

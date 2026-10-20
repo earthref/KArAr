@@ -1000,7 +1000,8 @@ export default function () {
             }
           }
         });
-        // TODO: change this to an update by script and only update the reference info:
+        // Update only the reference fields, keeping the other columns of the
+        // contribution table row (e.g., lab_names, funding) from the uploaded file.
         await esClient.update({
           "index": index,
           "type": "_doc",
@@ -1008,9 +1009,19 @@ export default function () {
           "refresh": true,
           "retryOnConflict": 5,
           "body": {
-            "doc": {
-              "summary": {
-                "contribution": {
+            "script": {
+              "source": `
+                def s = ctx._source.summary.contribution;
+                for (e in params.s.entrySet()) { s[e.getKey()] = e.getValue(); }
+                if (ctx._source.contribution == null) { ctx._source.contribution = [:]; }
+                if (ctx._source.contribution.contribution == null || ctx._source.contribution.contribution.size() == 0) {
+                  ctx._source.contribution.contribution = [[:]];
+                }
+                def r = ctx._source.contribution.contribution[0];
+                for (e in params.r.entrySet()) { r[e.getKey()] = e.getValue(); }
+              `,
+              "params": {
+                "s": {
                   "version": version,
                   "contributor": contributor,
                   "timestamp": timestamp,
@@ -1019,10 +1030,8 @@ export default function () {
                   "reference": doi,
                   "_reference": _reference,
                   "_history": _history
-                }
-              },
-              "contribution": {
-                "contribution": [{
+                },
+                "r": {
                   "id": _.parseInt(id),
                   "version": version,
                   "contributor": contributor,
@@ -1030,7 +1039,7 @@ export default function () {
                   "data_model_version": _.last(versions),
                   "description": description,
                   "reference": doi
-                }]
+                }
               }
             }
           }
