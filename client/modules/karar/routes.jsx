@@ -125,10 +125,18 @@ const Routes = ({match}) => (
       if (window.history.replaceState)
         window.history.replaceState({}, 'KArAr Data Models | EarthRef.org', '/KArAr/data-models/' + match.params.v);    
       return (
-        <Page portal="KArAr" title="Browse the current and recent KArAr Data Models:" menu={<KArArMenu/>}>
+        <Page portal="KArAr" title="The KArAr Data Models:" menu={<KArArMenu/>}>
           <Helmet>
             <title>KArAr Data Models | EarthRef.org</title>
           </Helmet>
+          <p>
+          The KArAr data model is hierarchical. Studies are based on isotopic measurements which is the bottom table of the hierarchy. Then there are specimens, samples, sites, and locations tables with a contribution table at the top.
+          </p>
+          <p>
+          You can do a text search of the model using the search box in the upper right above the table descriptions.
+          Clicking on the arrows open and close listings of the columns in each table. If you wish to have addtional columns added for your data or have other suggestions, contact us using the contact link in the upper right of the webpage.
+          </p>
+
           <KArArDataModel version={match.params.v} search={queryString.parse(location.search).q || ""}/>
         </Page>
       );
